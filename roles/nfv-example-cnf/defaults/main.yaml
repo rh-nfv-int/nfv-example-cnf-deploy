@@ -1,0 +1,25 @@
+---
+cluster_name: cluster5
+operator_version: v0.0.1
+app_version: v0.1.0
+
+cluster_url: "jumphost.{{ cluster_name }}.dfwt5g.lab"
+
+repo_name: nfv-example-cnf
+cluster_repo_name: "{{ repo_name }}-{{ cluster_name }}"
+
+catalog_name: nfv-example-cnf-catalog
+catalog_image: "{{ cluster_url }}:5000/{{ cluster_repo_name }}/{{ catalog_name }}:{{ operator_version }}"
+
+cnf_namespace: example-cnf
+
+testpmd_channel: alpha
+trex_channel: alpha
+
+testpmd_app_image: "{{ cluster_url }}:5000/{{ repo_name }}/testpmd-container-app:{{ app_version }}"
+trex_app_image: "{{ cluster_url }}:5000/{{ repo_name }}/trex-container-app:{{ app_version }}"
+
+trex_mac_list: ["20:04:0f:f1:89:01","20:04:0f:f1:89:02"]
+networks:
+  - name: vfdpdk1
+    count: 2

@@ -1,0 +1,70 @@
+---
+# NetworkAttachmentDefintions should be created on the namespace, it
+# will be created by sriov operator, when SriovNetwork resource is created
+- name: check for net-attach-def presence in the namepsace
+  k8s_info:
+    api_version: k8s.cni.cncf.io/v1
+    kind: NetworkAttachmentDefinition
+    namespace: "{{ cnf_namespace }}"
+  register: net_list
+  async: 30
+  poll: 2
+  failed_when: "net_list|length == 0"
+
+# Label node to run trex 
+# label_selectors cannot work with '/' in labels
+- name: get all nodes
+  k8s_info:
+    kind: Node
+  register: nodes
+- name: reset node count
+  set_fact:
+    trex_node_count: 0
+    testpmd_node_count: 0
+- name: get all trex nodes
+  set_fact:
+    trex_node_count: "{{ trex_node_count|int + 1}}"
+  when: '"examplecnf.openshift.io/trex" in item["metadata"]["labels"]'
+  loop: "{{ nodes.resources }}"
+- name: get all testpmd nodes
+  set_fact:
+    testpmd_node_count: "{{ testpmd_node_count|int + 1}}"
+  when: '"examplecnf.openshift.io/testpmd" in item["metadata"]["labels"]'
+  loop: "{{ nodes.resources }}"
+- fail:
+    msg: "One of the node should have Label (examplecnf.openshift.io/trex='')"
+  when: "trex_node_count|int == 0"
+- fail:
+    msg: "One of the node should have Label (examplecnf.openshift.io/testpmd='')"
+  when: "testpmd_node_count|int == 0"
+
+- name: create cr for testpmd
+  k8s:
+    api_version: examplecnf.openshift.io/v1
+    kind: TestPMD
+    namespace: "{{ cnf_namespace }}"
+    name: testpmd-app
+    definition:
+      spec:
+        image: "{{ testpmd_app_image }}"
+        ethpeerMaclist: "{{ trex_mac_list }}"
+        networks: "{{ networks }}"
+- name: set networks_trex fact as empty list
+  set_fact:
+    networks_trex: []
+- name: create network list for trex with hardcoded macs
+  set_fact:
+    networks_trex: "{{ networks_trex + [ item | combine({ 'mac': trex_mac_list[idx:idx+item.count] }) ] }}"
+  loop: "{{ networks }}"
+  loop_control:
+    index_var: idx
+- name: create cr for trex
+  k8s:
+    api_version: examplecnf.openshift.io/v1
+    kind: TRexConfig
+    namespace: "{{ cnf_namespace }}"
+    name: trexconfig-app
+    definition:
+      spec:
+        image: "{{ trex_app_image }}"
+        networks: "{{ networks_trex }}"

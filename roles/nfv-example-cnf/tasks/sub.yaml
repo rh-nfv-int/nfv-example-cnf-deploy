@@ -1,0 +1,46 @@
+---
+- name: create testpmd subscription
+  k8s:
+    api_version: operators.coreos.com/v1alpha1
+    kind: Subscription
+    name: testpmd-operator-subscription
+    namespace: "{{ cnf_namespace }}"
+    definition:
+      spec:
+        channel: "{{ testpmd_channel }}"
+        name: testpmd-operator
+        source: "{{ catalog_name }}"
+        sourceNamespace: openshift-marketplace
+- name: create trex subscription
+  k8s:
+    api_version: operators.coreos.com/v1alpha1
+    kind: Subscription
+    name: trex-operator-subscription
+    namespace: "{{ cnf_namespace }}"
+    definition:
+      spec:
+        channel: "{{ trex_channel }}"
+        name: trex-operator
+        source: "{{ catalog_name }}"
+        sourceNamespace: openshift-marketplace
+- name: "wait for csv installation in {{ cnf_namespace }}"
+  k8s_info:
+    api_version: operators.coreos.com/v1alpha1
+    kind: ClusterServiceVersion
+    namespace: "{{ cnf_namespace }}"
+  register: csv_list
+  retries: 24
+  delay: 5
+  until: "csv_list.resources|length >= 2"
+  failed_when: "csv_list.resources|length < 2"
+- name: "wait for pod in {{ cnf_namespace }}"
+  k8s_info:
+    kind: Pod
+    namespace: "{{ cnf_namespace }}"
+    field_selectors:
+      - status.phase=Running
+  register: pod_list
+  retries: 30
+  delay: 5
+  until: "pod_list.resources|length >= 2"
+  failed_when: "pod_list.resources|length < 2"

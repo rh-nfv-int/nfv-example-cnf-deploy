@@ -1,0 +1,49 @@
+---
+- name: check if catalogsource crd is present
+  k8s_info:
+    kind: CustomResourceDefinition
+    name: catalogsources.operators.coreos.com
+  register: crd_info
+- name: fail if catalogsource resource is not found
+  fail:
+    msg: "missing catalogsources.operators.coreos.com CRD"
+  when: crd_info.resources|length == 0
+- name: create catalogsource object for example-cnf
+  k8s:
+    state: present
+    definition:
+      apiVersion: operators.coreos.com/v1alpha1
+      kind: CatalogSource
+      metadata:
+        name: "{{ catalog_name }}"
+        namespace: openshift-marketplace
+      spec:
+        sourceType: grpc
+        image: "{{ catalog_image }}"
+        displayName: NFV Example CNF Catalog - v1beta1
+        updateStrategy:
+          registryPoll: 
+            interval: 30m
+- name: wait for testpmd-operator packagemanifests creation
+  k8s_info:
+    api_version: packages.operators.coreos.com/v1
+    kind: PackageManifest
+    name: testpmd-operator
+    namespace: default
+  register: pkg_manifest_testpmd
+  retries: 15
+  delay: 2
+  until: pkg_manifest_testpmd.resources|length != 0
+  failed_when: pkg_manifest_testpmd.resources|length == 0
+- name: wait for trex-operator packagemanifests creation
+  k8s_info:
+    api_version: packages.operators.coreos.com/v1
+    kind: PackageManifest
+    name: trex-operator
+    namespace: default
+  register: pkg_manifest_trex
+  retries: 15
+  delay: 2
+  until: pkg_manifest_trex.resources|length != 0
+  failed_when: pkg_manifest_trex.resources|length == 0
+
