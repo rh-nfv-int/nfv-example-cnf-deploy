@@ -49,6 +49,9 @@
         image: "{{ testpmd_app_image }}"
         ethpeerMaclist: "{{ trex_mac_list }}"
         networks: "{{ networks }}"
+        mac_workaround_enable: true
+        mac_workaround_image: "{{ mac_workaround_image }}"
+        mac_workaround_version: "{% if 'v0.0.' in operator_version %}4.4{% else %}{{ ocp_version }}{% endif %}"
 - name: set networks_trex fact as empty list
   set_fact:
     networks_trex: []
