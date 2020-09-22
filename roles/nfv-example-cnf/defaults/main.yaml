@@ -3,7 +3,7 @@
 cluster_name: cluster5
 operator_version: v0.0.1
 app_version: v0.1.0
-cluster_url: "jumphost.{{ cluster_name }}.dfwt5g.lab:5000"
+registry_url: "jumphost.{{ cluster_name }}.dfwt5g.lab:5000"
 repo_name: nfv-example-cnf
 ocp_version: 4.5
 
@@ -11,16 +11,16 @@ ocp_version: 4.5
 cluster_repo_name: "{{ repo_name }}{% if cluster_name %}-{{ cluster_name }}{% endif %}"
 
 catalog_name: nfv-example-cnf-catalog
-catalog_image: "{{ cluster_url }}/{{ cluster_repo_name }}/{{ catalog_name }}:{{ operator_version }}"
+catalog_image: "{{ registry_url }}/{{ cluster_repo_name }}/{{ catalog_name }}:{{ operator_version }}"
 
 cnf_namespace: example-cnf
 
 testpmd_channel: alpha
 trex_channel: alpha
 
-testpmd_app_image: "{{ cluster_url }}/{{ repo_name }}/testpmd-container-app:{{ app_version }}"
-trex_app_image: "{{ cluster_url }}/{{ repo_name }}/trex-container-app:{{ app_version }}"
-mac_workaround_image: "{{ cluster_url }}/{{ repo_name }}/testpmd-container-app-mac-fix:{{ app_version }}"
+testpmd_app_image: "{{ registry_url }}/{{ repo_name }}/testpmd-container-app:{{ app_version }}"
+trex_app_image: "{{ registry_url }}/{{ repo_name }}/trex-container-app:{{ app_version }}"
+mac_workaround_image: "{{ registry_url }}/{{ repo_name }}/testpmd-container-app-mac-fix:{{ app_version }}"
 
 trex_mac_list: ["20:04:0f:f1:89:01","20:04:0f:f1:89:02"]
 networks:
