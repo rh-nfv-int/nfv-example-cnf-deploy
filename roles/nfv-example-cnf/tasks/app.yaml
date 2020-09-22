@@ -21,19 +21,11 @@
   set_fact:
     trex_node_count: 0
     testpmd_node_count: 0
-- name: get all trex nodes
-  set_fact:
-    trex_node_count: "{{ trex_node_count|int + 1}}"
-  when: '"examplecnf.openshift.io/trex" in item["metadata"]["labels"]'
-  loop: "{{ nodes.resources }}"
 - name: get all testpmd nodes
   set_fact:
     testpmd_node_count: "{{ testpmd_node_count|int + 1}}"
   when: '"examplecnf.openshift.io/testpmd" in item["metadata"]["labels"]'
   loop: "{{ nodes.resources }}"
-- fail:
-    msg: "One of the node should have Label (examplecnf.openshift.io/trex='')"
-  when: "trex_node_count|int == 0"
 - fail:
     msg: "One of the node should have Label (examplecnf.openshift.io/testpmd='')"
   when: "testpmd_node_count|int == 0"
@@ -52,22 +44,33 @@
         mac_workaround_enable: true
         mac_workaround_image: "{{ mac_workaround_image }}"
         mac_workaround_version: "{% if 'v0.0.' in operator_version %}4.4{% else %}{{ ocp_version }}{% endif %}"
-- name: set networks_trex fact as empty list
-  set_fact:
-    networks_trex: []
-- name: create network list for trex with hardcoded macs
-  set_fact:
-    networks_trex: "{{ networks_trex + [ item | combine({ 'mac': trex_mac_list[idx:idx+item.count] }) ] }}"
-  loop: "{{ networks }}"
-  loop_control:
-    index_var: idx
-- name: create cr for trex
-  k8s:
-    api_version: examplecnf.openshift.io/v1
-    kind: TRexConfig
-    namespace: "{{ cnf_namespace }}"
-    name: trexconfig
-    definition:
-      spec:
-        image: "{{ trex_app_image }}"
-        networks: "{{ networks_trex }}"
+- name: trex cr block
+  when: enable_trex|bool
+  block:
+    - name: get all trex nodes
+      set_fact:
+        trex_node_count: "{{ trex_node_count|int + 1}}"
+      when: '"examplecnf.openshift.io/trex" in item["metadata"]["labels"]'
+      loop: "{{ nodes.resources }}"
+    - fail:
+        msg: "One of the node should have Label (examplecnf.openshift.io/trex='')"
+      when: "trex_node_count|int == 0"
+    - name: set networks_trex fact as empty list
+      set_fact:
+        networks_trex: []
+    - name: create network list for trex with hardcoded macs
+      set_fact:
+        networks_trex: "{{ networks_trex + [ item | combine({ 'mac': trex_mac_list[idx:idx+item.count] }) ] }}"
+      loop: "{{ networks }}"
+      loop_control:
+        index_var: idx
+    - name: create cr for trex
+      k8s:
+        api_version: examplecnf.openshift.io/v1
+        kind: TRexConfig
+        namespace: "{{ cnf_namespace }}"
+        name: trexconfig
+        definition:
+          spec:
+            image: "{{ trex_app_image }}"
+            networks: "{{ networks_trex }}"

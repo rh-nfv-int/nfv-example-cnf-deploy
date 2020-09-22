@@ -12,6 +12,7 @@
         source: "{{ catalog_name }}"
         sourceNamespace: openshift-marketplace
 - name: create trex subscription
+  when: enable_trex|bool
   k8s:
     api_version: operators.coreos.com/v1alpha1
     kind: Subscription
@@ -23,6 +24,14 @@
         name: trex-operator
         source: "{{ catalog_name }}"
         sourceNamespace: openshift-marketplace
+- name: set csv count
+  set_fact:
+    csv_count: 2
+  when: enable_trex|bool
+- name: set csv count for testpmd only
+  set_fact:
+    csv_count: 1
+  when: not enable_trex|bool
 - name: "wait for csv installation in {{ cnf_namespace }}"
   k8s_info:
     api_version: operators.coreos.com/v1alpha1
@@ -31,8 +40,8 @@
   register: csv_list
   retries: 24
   delay: 5
-  until: "csv_list.resources|length >= 2"
-  failed_when: "csv_list.resources|length < 2"
+  until: "csv_list.resources|length >= csv_count"
+  failed_when: "csv_list.resources|length < csv_count"
 - name: "wait for pod in {{ cnf_namespace }}"
   k8s_info:
     kind: Pod
@@ -42,5 +51,5 @@
   register: pod_list
   retries: 30
   delay: 5
-  until: "pod_list.resources|length >= 2"
-  failed_when: "pod_list.resources|length < 2"
+  until: "pod_list.resources|length >= csv_count"
+  failed_when: "pod_list.resources|length < csv_count"
