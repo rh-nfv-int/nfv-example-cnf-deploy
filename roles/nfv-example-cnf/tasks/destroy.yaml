@@ -1,0 +1,69 @@
+---
+- name: list testpmd CRs
+  k8s_info:
+    api_version: examplecnf.openshift.io/v1
+    kind: TestPMD
+    namespace: "{{ cnf_namespace }}"
+  register: testpmd_crs
+- name: remove testpmd CR
+  k8s:
+    api_version: examplecnf.openshift.io/v1
+    kind: TestPMD
+    namespace: "{{ cnf_namespace }}"
+    name: "{{ item.metadata.name }}"
+    state: absent
+  loop: "{{ testpmd_crs.resources }}"
+
+- name: list trexconfig CRs
+  k8s_info:
+    api_version: examplecnf.openshift.io/v1
+    kind: TRexConfig
+    namespace: "{{ cnf_namespace }}"
+  register: trexconfig_crs
+- name: remove trexconfig CR
+  k8s:
+    api_version: examplecnf.openshift.io/v1
+    kind: TRexConfig
+    namespace: "{{ cnf_namespace }}"
+    name: "{{ item.metadata.name }}"
+    state: absent
+  loop: "{{ trexconfig_crs.resources }}"
+
+- name: list subscription
+  k8s_info:
+    api_version: operators.coreos.com/v1alpha1
+    kind: Subscription
+    namespace: "{{ cnf_namespace }}"
+  register: subs
+- name: remove subscription
+  k8s:
+    api_version: operators.coreos.com/v1alpha1
+    kind: Subscription
+    namespace: "{{ cnf_namespace }}"
+    name: "{{ item.metadata.name }}"
+    state: absent
+  loop: "{{ subs.resources }}"
+
+- name: list csv
+  k8s_info:
+    api_version: operators.coreos.com/v1alpha1
+    kind: ClusterServiceVersion
+    namespace: "{{ cnf_namespace }}"
+  register: csvs
+- name: remove csv
+  k8s:
+    api_version: operators.coreos.com/v1alpha1
+    kind: ClusterServiceVersion
+    namespace: "{{ cnf_namespace }}"
+    name: "{{ item.metadata.name }}"
+    state: absent
+  loop: "{{ csvs.resources }}"
+
+- name: remove catalogsource
+  k8s:
+    api_version: operators.coreos.com/v1alpha1
+    kind: CatalogSource
+    namespace: openshift-marketplace
+    name: "{{ catalog_name }}"
+    state: absent
+  when: remove_catalog_source is defined and remove_catalog_source

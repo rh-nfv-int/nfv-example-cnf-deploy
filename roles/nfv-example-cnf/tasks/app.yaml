@@ -11,7 +11,7 @@
   poll: 2
   failed_when: "net_list|length == 0"
 
-# Label node to run trex 
+# Label node to run trex
 # label_selectors cannot work with '/' in labels
 - name: get all nodes
   k8s_info:
@@ -43,7 +43,7 @@
     api_version: examplecnf.openshift.io/v1
     kind: TestPMD
     namespace: "{{ cnf_namespace }}"
-    name: testpmd-app
+    name: testpmd
     definition:
       spec:
         image: "{{ testpmd_app_image }}"
@@ -63,7 +63,7 @@
     api_version: examplecnf.openshift.io/v1
     kind: TRexConfig
     namespace: "{{ cnf_namespace }}"
-    name: trexconfig-app
+    name: trexconfig
     definition:
       spec:
         image: "{{ trex_app_image }}"

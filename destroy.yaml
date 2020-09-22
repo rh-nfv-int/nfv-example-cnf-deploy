@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - import_role:
+        name: nfv-example-cnf
+        tasks_from: destroy.yaml
