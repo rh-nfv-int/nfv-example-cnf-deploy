@@ -39,9 +39,10 @@
     definition:
       spec:
         image: "{{ testpmd_app_image }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
         ethpeerMaclist: "{{ trex_mac_list }}"
         networks: "{{ networks }}"
-        macWorkaroundWnable: true
+        macWorkaroundEnable: true
         macWorkaroundImage: "{{ mac_workaround_image }}"
         macWorkaroundVersion: "{% if 'v0.0.' in operator_version %}4.4{% else %}{{ ocp_version }}{% endif %}"
 - name: trex cr block
@@ -73,4 +74,5 @@
         definition:
           spec:
             image: "{{ trex_app_image }}"
+            imagePullPolicy: "{{ image_pull_policy }}"
             networks: "{{ networks_trex }}"
