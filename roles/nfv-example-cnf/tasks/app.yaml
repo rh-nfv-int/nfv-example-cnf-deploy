@@ -41,9 +41,9 @@
         image: "{{ testpmd_app_image }}"
         ethpeerMaclist: "{{ trex_mac_list }}"
         networks: "{{ networks }}"
-        mac_workaround_enable: true
-        mac_workaround_image: "{{ mac_workaround_image }}"
-        mac_workaround_version: "{% if 'v0.0.' in operator_version %}4.4{% else %}{{ ocp_version }}{% endif %}"
+        macWorkaroundWnable: true
+        macWorkaroundImage: "{{ mac_workaround_image }}"
+        macWorkaroundVersion: "{% if 'v0.0.' in operator_version %}4.4{% else %}{{ ocp_version }}{% endif %}"
 - name: trex cr block
   when: enable_trex|bool
   block:
