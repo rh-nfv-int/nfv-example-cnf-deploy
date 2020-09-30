@@ -1,0 +1,77 @@
+---
+- name: get all nodes
+  k8s_info:
+    kind: Node
+  register: nodes
+- name: reset node count
+  set_fact:
+    testpmd_node_count: 0
+- name: get all testpmd nodes
+  set_fact:
+    testpmd_node_count: "{{ testpmd_node_count|int + 1}}"
+  when: '"examplecnf.openshift.io/testpmd" in item["metadata"]["labels"]'
+  loop: "{{ nodes.resources }}"
+- fail:
+    msg: "2 nodes should be labeled with 'examplecnf.openshift.io/testpmd='"
+  when: testpmd_node_count|int < 2
+
+- name: get TestPMD CR info
+  k8s_info:
+    namespace: example-cnf
+    kind: TestPMD
+  register: testpmd_list
+- name: validate number of TestPMD CRs
+  fail:
+    msg: "TestPMD CRs count ({{ testpmd_list.resources|length }}) is invalid "
+  when: "testpmd_list.resources|length != 1"
+- name: set testpmd CR name
+  set_fact:
+    testpmd_cr_name: "{{ testpmd_list.resources[0].metadata.name }}"
+- name: get TRexConfig CR info
+  k8s_info:
+    namespace: example-cnf
+    kind: TRexConfig
+  register: trex_list
+- name: validate number of TRexConfig CRs
+  fail:
+    msg: "TRexConfig CRs count ({{ trex_list.resources|length }}) is invalid "
+  when: "trex_list.resources|length != 1"
+- name: set trexconfig CR name
+  set_fact:
+    trex_cr_name: "{{ trex_list.resources[0].metadata.name }}"
+
+# currently only one testpmd is expected
+- name: get testpmd pod
+  set_fact:
+    testpmd_pod: "{{ lookup('k8s', kind='Pod', namespace='example-cnf', label_selector='app=testpmd') }}"
+
+- name: set testpmd node name
+  set_fact:
+    testpmd_existing_node: "{{ testpmd_pod.spec.nodeName }}"
+- name: cordon the node
+  shell: |
+     oc --kubeconfig ${K8S_AUTH_KUBECONFIG} adm cordon {{ testpmd_existing_node }}
+- name: delete the testpmd pod
+  k8s:
+    kind: Pod
+    namespace: example-cnf
+    name: "{{ testpmd_pod.metadata.name }}"
+    state: absent
+    wait: yes
+- name: get testpmd pod
+  set_fact:
+    testpmd_new_pod: "{{ lookup('k8s', kind='Pod', namespace='example-cnf', label_selector='app=testpmd') }}"
+- name: set new testpmd node name
+  set_fact:
+    testpmd_new_node: "{{ testpmd_new_pod.spec.nodeName }}"
+- name: uncordon the node
+  shell: |
+     oc --kubeconfig ${K8S_AUTH_KUBECONFIG} adm uncordon {{ testpmd_existing_node }}
+- fail:
+    msg: "TestPMD pod is not migrated"
+  when: testpmd_new_node == testpmd_existing_node
+- debug:
+    msg: "TestPMD pod is migrated from {{ testpmd_existing_node }} to {{ testpmd_new_node }}"
+- name: wait for migration to complete and packet recovery (give enough buffer)
+  pause:
+    minutes: "{{ migration_delay|default(2) }}"

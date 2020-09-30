@@ -1,0 +1,26 @@
+---
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: delete all resources
+      import_role:
+        name: nfv-example-cnf
+        tasks_from: destroy.yaml
+    - name: create resources
+      import_role:
+        name: nfv-example-cnf
+    - name: wait for trex to stablize
+      pause:
+        minutes: 2
+    - name: run migration test
+      import_role:
+        name: example-cnf-validate
+    - name: delete all resource on completion
+      import_role:
+        name: nfv-example-cnf
+        tasks_from: destroy.yaml
+      when: not skip_post_delete|bool
+    - name: execution results
+      debug:
+        var: packet_details
+

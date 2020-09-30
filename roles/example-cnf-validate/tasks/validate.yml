@@ -1,0 +1,57 @@
+---
+- name: set event list variable
+  set_fact:
+    event_list: []
+    dropped_new: []
+    matched_new: []
+
+- name: get trexconfig matched events
+  k8s_info:
+    namespace: example-cnf
+    kind: Event
+    field_selectors:
+      - reason==PacketMatched
+  register: matched
+  no_log: true
+- name: get trexconfig dropped events
+  k8s_info:
+    namespace: example-cnf
+    kind: Event
+    field_selectors:
+      - reason==PacketDropped
+  register: dropped
+  no_log: true
+
+- name: merge dropped events to custom object list
+  set_fact:
+    dropped_new: "{{ dropped_new + [{ 'eventTime': item.eventTime, 'reason': item.reason }] }}"
+  loop: "{{ dropped.resources }}"
+  no_log: true
+- name: merge matched events to custom object list
+  set_fact:
+    matched_new: "{{ matched_new + [{ 'eventTime': item.eventTime, 'reason': item.reason }] }}"
+  loop: "{{ matched.resources }}"
+  no_log: true
+- name: find packet mssing details
+  packet_missing:
+    dropped: "{{ dropped_new }}"
+    matched: "{{ matched_new }}"
+  register: packet_details
+
+- debug: var=packet_details.missing
+
+#- name: merge dropped events to custom object list
+#  set_fact:
+#    event_list: "{{ event_list + [{ 'eventTime': item.eventTime, 'reason': item.reason }] }}"
+#  loop: "{{ dropped.resources }}"
+#  no_log: true
+#- name: merge matched events to custom object list
+#  set_fact:
+#    event_list: "{{ event_list + [{ 'eventTime': item.eventTime, 'reason': item.reason }] }}"
+#  loop: "{{ matched.resources }}"
+#  no_log: true
+#- name: sort event list by time
+#  set_fact:
+#    sorted_event_list: "{{ event_list | dictsortdate }}"
+#- debug:
+#    var: sorted_event_list
