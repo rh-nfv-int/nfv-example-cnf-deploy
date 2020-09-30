@@ -67,3 +67,13 @@
     name: "{{ catalog_name }}"
     state: absent
   when: remove_catalog_source is defined and remove_catalog_source
+
+- name: ensure all pods are deleteted
+  k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: Pod
+  register: pod_list
+  retries: 60
+  delay: 5
+  until: pod_list.resources|length == 0
+  failed_when: pod_list.resources|length != 0

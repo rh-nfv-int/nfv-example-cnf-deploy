@@ -45,6 +45,34 @@
         macWorkaroundEnable: true
         macWorkaroundImage: "{{ mac_workaround_image }}"
         macWorkaroundVersion: "{% if 'v0.0.' in operator_version %}4.4{% else %}{{ ocp_version }}{% endif %}"
+
+- name: check testpmd pod count to be 1
+  k8s_info:
+    namespace: example-cnf
+    kind: Pod
+    label_selectors:
+      - app=testpmd
+  register: testpmd_pods
+  retries: 60
+  delay: 5
+  until:
+    - testpmd_pods.resources|length == 1
+  failed_when:
+    - testpmd_pods.resources|length != 1
+- name: check testpmd pod status to be running
+  k8s_info:
+    namespace: example-cnf
+    kind: Pod
+    label_selectors:
+      - app=testpmd
+  register: testpmd_pods
+  retries: 60
+  delay: 5
+  until:
+    - testpmd_pods.resources[0].status.phase == 'Running'
+  failed_when:
+    - testpmd_pods.resources[0].status.phase != 'Running'
+
 - name: trex cr block
   when: enable_trex|bool
   block:
@@ -76,3 +104,29 @@
             image: "{{ trex_app_image }}"
             imagePullPolicy: "{{ image_pull_policy }}"
             networks: "{{ networks_trex }}"
+    - name: check trex pod count to be 1
+      k8s_info:
+        namespace: example-cnf
+        kind: Pod
+        label_selectors:
+          - app=trex
+      register: trex_pods
+      retries: 60
+      delay: 5
+      until:
+        - trex_pods.resources|length == 1
+      failed_when:
+        - trex_pods.resources|length != 1
+    - name: check trex pod status to be running
+      k8s_info:
+        namespace: example-cnf
+        kind: Pod
+        label_selectors:
+          - app=trex
+      register: trex_pods
+      retries: 60
+      delay: 5
+      until:
+        - trex_pods.resources[0].status.phase == 'Running'
+      failed_when:
+        - trex_pods.resources[0].status.phase != 'Running'

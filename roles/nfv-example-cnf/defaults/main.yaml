@@ -2,7 +2,7 @@
 # Customizable variables
 cluster_name: cluster5
 operator_version: v0.0.1
-app_version: v0.1.1
+app_version: v0.1.2
 registry_url: "jumphost.{{ cluster_name }}.dfwt5g.lab:5000"
 repo_name: nfv-example-cnf
 ocp_version: 4.5
