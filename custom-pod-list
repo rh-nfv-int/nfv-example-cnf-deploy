@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+
+import os
+
+from kubernetes import client, config
+from kubernetes.client.rest import ApiException
+from prettytable import PrettyTable
+
+kubeconfig = os.getenv("K8S_AUTH_KUBECONFIG") or os.getenv("KUBECONFIG")
+config.load_kube_config(kubeconfig)
+
+def get_pods():
+    t = PrettyTable(['Name', 'Status', 'Node'])
+    t.align['Name'] = 'l'                                                                                                       
+    t.align['Status'] = 'l'
+    t.align['Node'] = 'l'
+    t.border = False
+    t.right_padding_width = 1
+    t.left_padding_width = 0
+
+    v1 = client.CoreV1Api()
+    pod_list = v1.list_namespaced_pod("example-cnf")
+    for pod in pod_list.items:
+        reason = pod.status.phase                                                                                               
+        if pod.status.reason:
+            reason = pod.status.reason
+        has_running = False
+        restarts = 0
+        for item in pod.status.container_statuses:
+            restarts += item.restart_count
+            if item.state.waiting and item.state.waiting.reason:
+                reason = item.state.waiting.reason
+            elif item.state.terminated and item.state.terminated.reason:
+                reason = item.state.terminated.reason
+            elif item.state.terminated:
+                if item.state.terminated.signal:
+                    resaon = ("Signal:%s" % item.state.terminated.signal)
+                else:
+                    reason = ("ExitCode:%s" % item.state.terminated.exit_code)
+            elif item.ready and item.state.running:
+                has_running = True
+        if reason == "Completed" and has_running:
+            pass
+        if pod.metadata.deletion_timestamp and pod.status.reason == "NodeLost":
+            reason = "Unknown"
+        elif pod.metadata.deletion_timestamp:
+            reason = "Terminating"
+        
+        name = pod.metadata.name[:40]
+        t.add_row([name, reason, pod.spec.node_name])
+    print(t)
+
+if __name__ == "__main__":
+    get_pods()
+
