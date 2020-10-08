@@ -3,5 +3,5 @@
   gather_facts: no
   tasks:
     - import_role:
-        name: nfv-example-cnf
+        name: example-cnf-deploy
         tasks_from: destroy.yaml

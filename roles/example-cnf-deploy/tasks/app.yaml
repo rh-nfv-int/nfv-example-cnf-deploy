@@ -42,6 +42,7 @@
         imagePullPolicy: "{{ image_pull_policy }}"
         ethpeerMaclist: "{{ trex_mac_list }}"
         networks: "{{ networks }}"
+        terminationGracePeriodSeconds: "{{ termination_grace_period_seconds }}"
         macWorkaroundEnable: true
         macWorkaroundImage: "{{ mac_workaround_image }}"
         macWorkaroundVersion: "{% if 'v0.0.' in operator_version %}4.4{% else %}{{ ocp_version }}{% endif %}"
@@ -72,6 +73,18 @@
     - testpmd_pods.resources[0].status.phase == 'Running'
   failed_when:
     - testpmd_pods.resources[0].status.phase != 'Running'
+
+- name: check testpmdmac resource (created by testpmd app)
+  k8s_info:
+    namespace: example-cnf
+    kind: TestPMDMac
+  register: testpmdmac
+  retries: 120
+  delay: 5
+  until:
+    - testpmdmac.resources|length > 0
+  failed_when:
+    - testpmdmac.resources|length == 0
 
 - name: trex cr block
   when: enable_trex|bool

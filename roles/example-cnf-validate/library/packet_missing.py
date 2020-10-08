@@ -105,12 +105,12 @@ def get_missing_list(module, result):
         obj['start'] = combine[i]['eventTime']
         obj['duration'] = diff_seconds
         missing.append(obj)
+
     result['missing'] = missing
-    result['strict'] = strict
     if missing:
         result['message'] = "Packet miss found"
-    elif strict:
-        result['message'] = "No or Negligible packet miss"
+    elif not strict and missing:
+        result['message'] = "No packet miss during migration"
     else:
         result["message"] = "No packet miss"
     return True
@@ -135,10 +135,12 @@ def run_module():
     )
 
 
+    result['strict'] = module.params['strict']
     if len(module.params['matched']) == 0:
         module.fail_json(msg='matched event list param is empty', **result)
     elif len(module.params['dropped']) == 0:
-        module.fail_json(msg='dropped event list param is empty', **result)
+        result['changed'] = True
+        result["message"] = "No packet miss"
     else:
         response = get_missing_list(module, result)
         if response:

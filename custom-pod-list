@@ -10,7 +10,7 @@ kubeconfig = os.getenv("K8S_AUTH_KUBECONFIG") or os.getenv("KUBECONFIG")
 config.load_kube_config(kubeconfig)
 
 def get_pods():
-    t = PrettyTable(['Name', 'Status', 'Node'])
+    t = PrettyTable(['Name', 'Node', 'Status'])
     t.align['Name'] = 'l'                                                                                                       
     t.align['Status'] = 'l'
     t.align['Node'] = 'l'
@@ -26,19 +26,20 @@ def get_pods():
             reason = pod.status.reason
         has_running = False
         restarts = 0
-        for item in pod.status.container_statuses:
-            restarts += item.restart_count
-            if item.state.waiting and item.state.waiting.reason:
-                reason = item.state.waiting.reason
-            elif item.state.terminated and item.state.terminated.reason:
-                reason = item.state.terminated.reason
-            elif item.state.terminated:
-                if item.state.terminated.signal:
-                    resaon = ("Signal:%s" % item.state.terminated.signal)
-                else:
-                    reason = ("ExitCode:%s" % item.state.terminated.exit_code)
-            elif item.ready and item.state.running:
-                has_running = True
+        if pod.status.container_statuses:
+            for item in pod.status.container_statuses:
+                restarts += item.restart_count
+                if item.state.waiting and item.state.waiting.reason:
+                    reason = item.state.waiting.reason
+                elif item.state.terminated and item.state.terminated.reason:
+                    reason = item.state.terminated.reason
+                elif item.state.terminated:
+                    if item.state.terminated.signal:
+                        resaon = ("Signal:%s" % item.state.terminated.signal)
+                    else:
+                        reason = ("ExitCode:%s" % item.state.terminated.exit_code)
+                elif item.ready and item.state.running:
+                    has_running = True
         if reason == "Completed" and has_running:
             pass
         if pod.metadata.deletion_timestamp and pod.status.reason == "NodeLost":
@@ -47,7 +48,7 @@ def get_pods():
             reason = "Terminating"
         
         name = pod.metadata.name[:40]
-        t.add_row([name, reason, pod.spec.node_name])
+        t.add_row([name, pod.spec.node_name, reason])
     print(t)
 
 if __name__ == "__main__":

@@ -4,20 +4,20 @@
   tasks:
     - name: delete all resources
       import_role:
-        name: nfv-example-cnf
+        name: example-cnf-deploy
         tasks_from: destroy.yaml
     - name: create resources
       import_role:
-        name: nfv-example-cnf
+        name: example-cnf-deploy
     - name: wait for trex to stablize
       pause:
-        minutes: 2
+        seconds: 30
     - name: run migration test
       import_role:
         name: example-cnf-validate
     - name: delete all resource on completion
       import_role:
-        name: nfv-example-cnf
+        name: example-cnf-deploy
         tasks_from: destroy.yaml
       when: not skip_post_delete|bool
     - name: execution results

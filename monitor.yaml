@@ -4,3 +4,6 @@
   tasks:
     - include_role:
         name: example-cnf-validate
+    - name: execution results
+      debug:
+        var: packet_details

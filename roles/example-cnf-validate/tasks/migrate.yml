@@ -9,7 +9,9 @@
 - name: get all testpmd nodes
   set_fact:
     testpmd_node_count: "{{ testpmd_node_count|int + 1}}"
-  when: '"examplecnf.openshift.io/testpmd" in item["metadata"]["labels"]'
+  when: 
+    - '"examplecnf.openshift.io/testpmd" in item["metadata"]["labels"]'
+    - '"unschedulable" not in item["spec"] or not item["spec"]["unschedulable"]'
   loop: "{{ nodes.resources }}"
 - fail:
     msg: "2 nodes should be labeled with 'examplecnf.openshift.io/testpmd='"
@@ -40,6 +42,20 @@
   set_fact:
     trex_cr_name: "{{ trex_list.resources[0].metadata.name }}"
 
+# Ensure there is atleast one patcket matched event
+- name: get packet matched event from trex
+  k8s_info:
+    namespace: example-cnf
+    kind: Event
+    field_selectors:
+      - reason==PacketMatched
+  register: matched
+  no_log: true
+- name: fail if no packet matched event is found from trex
+  fail:
+    msg: "PacketMatched event is not found in TRexConfig CR"
+  when: matched.resources|length == 0
+
 # currently only one testpmd is expected
 - name: get testpmd pod
   set_fact:
@@ -48,6 +64,9 @@
 - name: set testpmd node name
   set_fact:
     testpmd_existing_node: "{{ testpmd_pod.spec.nodeName }}"
+- name: show current node of testpmd
+  debug:
+    msg: "TestPMD is running on node {{ testpmd_existing_node }}"
 - name: cordon the node
   shell: |
      oc --kubeconfig ${K8S_AUTH_KUBECONFIG} adm cordon {{ testpmd_existing_node }}
@@ -58,6 +77,20 @@
     name: "{{ testpmd_pod.metadata.name }}"
     state: absent
     wait: yes
+    wait_timeout: 300
+- name: check testpmd pod count to be 1
+  k8s_info:
+    namespace: example-cnf
+    kind: Pod
+    label_selectors:
+      - app=testpmd
+  register: testpmd_pods
+  retries: 60
+  delay: 5
+  until:
+    - testpmd_pods.resources|length == 1
+  failed_when:
+    - testpmd_pods.resources|length != 1
 - name: get testpmd pod
   set_fact:
     testpmd_new_pod: "{{ lookup('k8s', kind='Pod', namespace='example-cnf', label_selector='app=testpmd') }}"
@@ -72,6 +105,6 @@
   when: testpmd_new_node == testpmd_existing_node
 - debug:
     msg: "TestPMD pod is migrated from {{ testpmd_existing_node }} to {{ testpmd_new_node }}"
-- name: wait for migration to complete and packet recovery (give enough buffer)
+- name: wait for migration to complete and packet recovery
   pause:
-    minutes: "{{ migration_delay|default(2) }}"
+    seconds: "{{ migration_delay_seconds|default(30) }}"
