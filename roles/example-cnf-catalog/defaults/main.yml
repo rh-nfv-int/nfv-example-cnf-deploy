@@ -1,0 +1,14 @@
+---
+# Customizable variables
+cluster_name: cluster5
+operator_version: v0.0.1
+registry_url: "jumphost.{{ cluster_name }}.dfwt5g.lab:5000"
+repo_name: nfv-example-cnf
+
+image_pull_policy: Always
+cluster_repo_name: "{{ repo_name }}{% if cluster_name %}-{{ cluster_name }}{% endif %}"
+
+catalog_name: nfv-example-cnf-catalog
+catalog_image: "{{ registry_url }}/{{ cluster_repo_name }}/{{ catalog_name }}:{{ operator_version }}"
+
+cnf_namespace: example-cnf

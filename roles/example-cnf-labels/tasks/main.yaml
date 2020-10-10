@@ -1,0 +1,59 @@
+---
+- name: create node-manage-operator subscription
+  k8s:
+    api_version: operators.coreos.com/v1alpha1
+    kind: Subscription
+    name: node-manage-operator-subscription
+    namespace: "{{ cnf_namespace }}"
+    definition:
+      spec:
+        channel: "alpha"
+        name: node-manage-operator
+        source: "{{ catalog_name }}"
+        sourceNamespace: openshift-marketplace
+- name: set csv name
+  set_fact:
+    node_manage_csv_name: "node-manage-operator.{{ operator_version }}"
+- name: get csv
+  k8s_info:
+    api: operators.coreos.com/v1alpha1
+    namespace: "{{ cnf_namespace }}"
+    kind: ClusterServiceVersion
+    name: "{{ node_manage_csv_name }}"
+  register: csv
+  retries: 30
+  delay: 5
+  until: "csv.resources|length == 1 and csv.resources[0].status.phase == 'Succeeded'"
+  failed_when: "csv.resources|length != 1 or csv.resources[0].status.phase != 'Succeeded'"
+- name: get pods
+  k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: Pod
+  register: pods
+- name: set the node manage operator pod name
+  set_fact:
+    node_manage_pod: "{{ item }}"
+  when: "'node-manage-operator' in item.metadata.name" 
+  loop: "{{ pods.resources }}"
+- name: ensure node-mangage operator is present
+  fail:
+    msg: "node-manage-operator is not present"
+  when: "node_manage_pod is not defined"
+- name: create cr for node labels
+  k8s:
+    api: nodemanage.openshift.io/v1
+    kind: NodeLabels
+    namespace: "{{ cnf_namespace }}"
+    name: "{{ cnf_namespace }}-labels"
+    definition:
+      spec:
+        nodeSelectorLabels:
+          node-role.kubernetes.io/worker: ""
+        labelGroup:
+          - count: 1
+            labels:
+              examplecnf.openshift.io/trex: "" 
+          - count: 2
+            labels:
+              examplecnf.openshift.io/testpmd: "" 
+

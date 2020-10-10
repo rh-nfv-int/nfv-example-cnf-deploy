@@ -12,10 +12,7 @@ enable_trex: true
 termination_grace_period_seconds: 240
 
 image_pull_policy: Always
-cluster_repo_name: "{{ repo_name }}{% if cluster_name %}-{{ cluster_name }}{% endif %}"
-
 catalog_name: nfv-example-cnf-catalog
-catalog_image: "{{ registry_url }}/{{ cluster_repo_name }}/{{ catalog_name }}:{{ operator_version }}"
 
 cnf_namespace: example-cnf
 

@@ -3,5 +3,4 @@
   gather_facts: no
   tasks:
     - import_role:
-        name: example-cnf-deploy
-        tasks_from: destroy.yaml
+        name: example-cnf-destroy

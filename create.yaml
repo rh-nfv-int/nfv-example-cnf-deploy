@@ -3,4 +3,8 @@
   gather_facts: no
   tasks:
     - import_role:
-        name: example-cnf-deploy
+        name: example-cnf-catalog
+    - import_role:
+        name: example-cnf-labels
+    - import_role:
+        name: example-cnf-app

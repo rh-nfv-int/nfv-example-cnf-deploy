@@ -1,6 +1,0 @@
----
-- include_tasks: catalog.yaml
-- include_tasks: common.yaml
-- include_tasks: sub.yaml
-- include_tasks: app.yaml
-

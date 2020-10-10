@@ -1,0 +1,5 @@
+---
+catalog_name: nfv-example-cnf-catalog
+cnf_namespace: example-cnf
+remove_catalog_source: false
+

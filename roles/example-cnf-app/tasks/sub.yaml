@@ -24,6 +24,39 @@
         name: trex-operator
         source: "{{ catalog_name }}"
         sourceNamespace: openshift-marketplace
+- name: set testpmd csv name
+  set_fact:
+    testpmd_csv_name: "testpmd-operator.{{ operator_version }}"
+- name: get testpmd csv
+  k8s_info:
+    api: operators.coreos.com/v1alpha1
+    namespace: "{{ cnf_namespace }}"
+    kind: ClusterServiceVersion
+    name: "{{ testpmd_csv_name }}"
+  register: csv
+  retries: 30
+  delay: 5
+  until: "csv.resources|length == 1 and csv.resources[0].status.phase == 'Succeeded'"
+  failed_when: "csv.resources|length != 1 or csv.resources[0].status.phase != 'Succeeded'"
+
+- name: trex csv check block
+  when: enable_trex|bool
+  block:
+  - name: set trex csv name
+    set_fact:
+      trex_csv_name: "trex-operator.{{ operator_version }}"
+  - name: get testpmd csv
+    k8s_info:
+      api: operators.coreos.com/v1alpha1
+      namespace: "{{ cnf_namespace }}"
+      kind: ClusterServiceVersion
+      name: "{{ trex_csv_name }}"
+    register: csv
+    retries: 30
+    delay: 5
+    until: "csv.resources|length == 1 and csv.resources[0].status.phase == 'Succeeded'"
+    failed_when: "csv.resources|length != 1 or csv.resources[0].status.phase != 'Succeeded'"
+
 - name: set csv count
   set_fact:
     csv_count: 2
@@ -32,16 +65,6 @@
   set_fact:
     csv_count: 1
   when: not enable_trex|bool
-- name: "wait for csv installation in {{ cnf_namespace }}"
-  k8s_info:
-    api_version: operators.coreos.com/v1alpha1
-    kind: ClusterServiceVersion
-    namespace: "{{ cnf_namespace }}"
-  register: csv_list
-  retries: 24
-  delay: 5
-  until: "csv_list.resources|length >= csv_count"
-  failed_when: "csv_list.resources|length < csv_count"
 - name: "wait for pod in {{ cnf_namespace }}"
   k8s_info:
     kind: Pod
