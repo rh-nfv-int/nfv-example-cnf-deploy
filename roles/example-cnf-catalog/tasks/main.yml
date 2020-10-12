@@ -31,8 +31,8 @@
     name: testpmd-operator
     namespace: default
   register: pkg_manifest_testpmd
-  retries: 15
-  delay: 2
+  retries: 30
+  delay: 5
   until: pkg_manifest_testpmd.resources|length != 0
   failed_when: pkg_manifest_testpmd.resources|length == 0
 - name: wait for trex-operator packagemanifests creation
@@ -42,8 +42,8 @@
     name: trex-operator
     namespace: default
   register: pkg_manifest_trex
-  retries: 15
-  delay: 2
+  retries: 30
+  delay: 5
   until: pkg_manifest_trex.resources|length != 0
   failed_when: pkg_manifest_trex.resources|length == 0
 - name: create namespace

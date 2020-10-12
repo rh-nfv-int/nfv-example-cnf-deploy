@@ -45,7 +45,7 @@
   - name: set trex csv name
     set_fact:
       trex_csv_name: "trex-operator.{{ operator_version }}"
-  - name: get testpmd csv
+  - name: get trex csv
     k8s_info:
       api: operators.coreos.com/v1alpha1
       namespace: "{{ cnf_namespace }}"
@@ -55,7 +55,7 @@
     retries: 30
     delay: 5
     until: "csv.resources|length == 1 and csv.resources[0].status.phase == 'Succeeded'"
-    failed_when: "csv.resources|length != 1 or csv.resources[0].status.phase != 'Succeeded'"
+    failed_when: "csv.resources|length != 1 or 'status' not in csv.resources[0] or csv.resources[0].status.phase != 'Succeeded'"
 
 - name: set csv count
   set_fact:
