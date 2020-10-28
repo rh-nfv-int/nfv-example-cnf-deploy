@@ -1,0 +1,67 @@
+---
+- name: get all trex nodes
+  set_fact:
+    trex_node_count: "{{ trex_node_count|int + 1}}"
+  when: '"examplecnf.openshift.io/trex" in item["metadata"]["labels"]'
+  loop: "{{ nodes.resources }}"
+- fail:
+    msg: "One of the node should have Label (examplecnf.openshift.io/trex='')"
+  when: "trex_node_count|int == 0"
+- name: set networks_trex fact as empty list
+  set_fact:
+    networks_trex: []
+- name: create network list for trex with hardcoded macs
+  set_fact:
+    networks_trex: "{{ networks_trex + [ item | combine({ 'mac': trex_mac_list[idx:idx+item.count] }) ] }}"
+  loop: "{{ networks }}"
+  loop_control:
+    index_var: idx
+- name: create cr for trex
+  k8s:
+    api_version: examplecnf.openshift.io/v1
+    kind: TRexConfig
+    namespace: "{{ cnf_namespace }}"
+    name: "{{ trex_cr_name }}"
+    definition:
+      spec:
+        image: "{{ trex_app_image }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
+        networks: "{{ networks_trex }}"
+- name: check trex pod count to be 1
+  k8s_info:
+    namespace: example-cnf
+    kind: Pod
+    label_selectors:
+      - app=trex
+  register: trex_pods
+  retries: 60
+  delay: 5
+  until:
+    - trex_pods.resources|length == 1
+  failed_when:
+    - trex_pods.resources|length != 1
+- name: check trex pod status to be running
+  k8s_info:
+    namespace: example-cnf
+    kind: Pod
+    label_selectors:
+      - app=trex
+  register: trex_pods
+  retries: 60
+  delay: 5
+  until:
+    - trex_pods.resources[0].status.phase == 'Running'
+  failed_when:
+    - trex_pods.resources[0].status.phase != 'Running'
+- name: wait for 30 seconds to stabilize trex output
+  pause:
+    seconds: 30
+# Ensure there is atleast one patcket matched event
+- name: get packet matched event from trex
+  k8s_info:
+    namespace: example-cnf
+    kind: Event
+    field_selectors:
+      - reason==PacketMatched
+  register: trex_matched_event
+  no_log: true

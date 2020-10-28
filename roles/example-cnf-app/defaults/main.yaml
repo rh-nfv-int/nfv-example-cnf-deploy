@@ -19,6 +19,8 @@ cnf_namespace: example-cnf
 testpmd_channel: alpha
 trex_channel: alpha
 
+trex_cr_name: trexconfig
+
 testpmd_app_version: "{{ app_version }}"
 testpmd_app_image: "{{ registry_url }}/{{ repo_name }}/testpmd-container-app:{{ testpmd_app_version }}"
 mac_workaround_image: "{{ registry_url }}/{{ repo_name }}/testpmd-container-app-mac-fix:{{ testpmd_app_version }}"
