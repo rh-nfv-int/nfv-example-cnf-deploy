@@ -3,16 +3,18 @@
   k8s_info:
     kind: Node
   register: nodes
+  no_log: true
 - name: reset node count
   set_fact:
     testpmd_node_count: 0
 - name: get all testpmd nodes
   set_fact:
     testpmd_node_count: "{{ testpmd_node_count|int + 1}}"
-  when: 
+  when:
     - '"examplecnf.openshift.io/testpmd" in item["metadata"]["labels"]'
     - '"unschedulable" not in item["spec"] or not item["spec"]["unschedulable"]'
   loop: "{{ nodes.resources }}"
+  no_log: true
 - fail:
     msg: "2 nodes should be labeled with 'examplecnf.openshift.io/testpmd='"
   when: testpmd_node_count|int < 2
