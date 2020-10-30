@@ -60,23 +60,35 @@
 
 # currently only one testpmd is expected
 - name: get testpmd pod
-  set_fact:
-    testpmd_pod: "{{ lookup('k8s', kind='Pod', namespace='example-cnf', label_selector='app=testpmd') }}"
+  k8s_info:
+    kind: Pod
+    namespace: example-cnf
+    label_selectors:
+      - app=testpmd
+  register: testpmd_pod
+- name: fail if the testpmd pod is not found
+  fail:
+    msg: "Unable to find testpmd pod"
+  when:
+    - "testpmd_pod.resources|length != 1"
 
 - name: set testpmd node name
   set_fact:
-    testpmd_existing_node: "{{ testpmd_pod.spec.nodeName }}"
+    testpmd_existing_node: "{{ testpmd_pod.resources[0].spec.nodeName }}"
+    testpmd_existing_pod_name: "{{ testpmd_pod.resources[0].metadata.name }}"
 - name: show current node of testpmd
   debug:
     msg: "TestPMD is running on node {{ testpmd_existing_node }}"
 - name: cordon the node
   shell: |
-     oc --kubeconfig ${K8S_AUTH_KUBECONFIG} adm cordon {{ testpmd_existing_node }}
+    export KUBECONFIG={{ kubeconfig_path }}
+    {{ oc_tool_path }} adm cordon {{ testpmd_existing_node }}
+
 - name: delete the testpmd pod
   k8s:
     kind: Pod
     namespace: example-cnf
-    name: "{{ testpmd_pod.metadata.name }}"
+    name: "{{ testpmd_existing_pod_name }}"
     state: absent
     wait: yes
     wait_timeout: 300
@@ -93,20 +105,36 @@
     - testpmd_pods.resources|length == 1
   failed_when:
     - testpmd_pods.resources|length != 1
+
 - name: get testpmd pod
-  set_fact:
-    testpmd_new_pod: "{{ lookup('k8s', kind='Pod', namespace='example-cnf', label_selector='app=testpmd') }}"
+  k8s_info:
+    kind: Pod
+    namespace: example-cnf
+    label_selectors:
+      - app=testpmd
+  register: testpmd_new_pod
+
+- name: fail if the new testpmd pod is not found
+  fail:
+    msg: "Unable to find new testpmd pod"
+  when:
+    - "testpmd_new_pod.resources|length != 1"
 - name: set new testpmd node name
   set_fact:
-    testpmd_new_node: "{{ testpmd_new_pod.spec.nodeName }}"
+    testpmd_new_node: "{{ testpmd_new_pod.resources[0].spec.nodeName }}"
+
 - name: uncordon the node
   shell: |
-     oc --kubeconfig ${K8S_AUTH_KUBECONFIG} adm uncordon {{ testpmd_existing_node }}
+    export KUBECONFIG={{ kubeconfig_path }}
+    {{ oc_tool_path }} adm uncordon {{ testpmd_existing_node }}
+
 - fail:
     msg: "TestPMD pod is not migrated"
   when: testpmd_new_node == testpmd_existing_node
+
 - debug:
     msg: "TestPMD pod is migrated from {{ testpmd_existing_node }} to {{ testpmd_new_node }}"
+
 - name: wait for migration to complete and packet recovery
   pause:
     seconds: "{{ migration_delay_seconds|default(30) }}"
