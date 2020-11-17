@@ -7,7 +7,7 @@ spec:
   image: {{ testpmd_app_image }}
   imagePullPolicy: {{ image_pull_policy }}
   ethpeerMaclist: {{ trex_mac_list }}
-  networks: {{ networks }}
+  networks: {{ cnf_app_networks }}
   terminationGracePeriodSeconds: {{ termination_grace_period_seconds }}
 {% if mac_workaround_enable|default(true) %}
   macWorkaroundEnable: true
