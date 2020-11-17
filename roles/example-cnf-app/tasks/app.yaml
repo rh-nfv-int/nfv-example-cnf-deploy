@@ -32,20 +32,7 @@
 
 - name: create cr for testpmd
   k8s:
-    api_version: examplecnf.openshift.io/v1
-    kind: TestPMD
-    namespace: "{{ cnf_namespace }}"
-    name: testpmd
-    definition:
-      spec:
-        image: "{{ testpmd_app_image }}"
-        imagePullPolicy: "{{ image_pull_policy }}"
-        ethpeerMaclist: "{{ trex_mac_list }}"
-        networks: "{{ networks }}"
-        terminationGracePeriodSeconds: "{{ termination_grace_period_seconds }}"
-        macWorkaroundEnable: true
-        macWorkaroundImage: "{{ mac_workaround_image }}"
-        macWorkaroundVersion: "{% if 'v0.0.' in operator_version %}4.4{% else %}{{ ocp_version }}{% endif %}"
+    definition: "{{ lookup('template', 'testpmd-cr.yaml.j2') }}"
 
 - name: check testpmd pod count to be 1
   k8s_info:
