@@ -4,6 +4,7 @@
     trex_node_count: "{{ trex_node_count|int + 1}}"
   when: '"examplecnf.openshift.io/trex" in item["metadata"]["labels"]'
   loop: "{{ nodes.resources }}"
+  no_log: true
 - fail:
     msg: "One of the node should have Label (examplecnf.openshift.io/trex='')"
   when: "trex_node_count|int == 0"
