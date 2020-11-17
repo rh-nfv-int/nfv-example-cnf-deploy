@@ -2,7 +2,7 @@ apiVersion: examplecnf.openshift.io/v1
 kind: TestPMD
 metadata:
   name: testpmd
-  namespace: "{{ cnf_namepsace }}"
+  namespace: "{{ cnf_namespace }}"
 spec:
   image: "{{ testpmd_app_image }}"
   imagePullPolicy: "{{ image_pull_policy }}"
