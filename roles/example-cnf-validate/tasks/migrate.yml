@@ -92,7 +92,7 @@
     state: absent
     wait: yes
     wait_timeout: 300
-- name: check testpmd pod count to be 1
+- name: check testpmd pod count to be 1 and running
   k8s_info:
     namespace: example-cnf
     kind: Pod
@@ -102,26 +102,14 @@
   retries: 60
   delay: 5
   until:
-    - testpmd_pods.resources|length == 1
-  failed_when:
-    - testpmd_pods.resources|length != 1
+    - "testpmd_pods.resources|length == 1"
+    - "'status'  in testpmd_pods.resources[0]"
+    - "'phase'  in testpmd_pods.resources[0].status"
+    - "testpmd_pods.resources[0].status.phase == 'Running'"
 
-- name: get testpmd pod
-  k8s_info:
-    kind: Pod
-    namespace: example-cnf
-    label_selectors:
-      - app=testpmd
-  register: testpmd_new_pod
-
-- name: fail if the new testpmd pod is not found
-  fail:
-    msg: "Unable to find new testpmd pod"
-  when:
-    - "testpmd_new_pod.resources|length != 1"
 - name: set new testpmd node name
   set_fact:
-    testpmd_new_node: "{{ testpmd_new_pod.resources[0].spec.nodeName }}"
+    testpmd_new_node: "{{ testpmd_pods.resources[0].spec.nodeName }}"
 
 - name: uncordon the node
   shell: |
