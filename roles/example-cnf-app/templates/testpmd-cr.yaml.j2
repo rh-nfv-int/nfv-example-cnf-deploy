@@ -2,15 +2,15 @@ apiVersion: examplecnf.openshift.io/v1
 kind: TestPMD
 metadata:
   name: testpmd
-  namespace: "{{ cnf_namespace }}"
+  namespace: {{ cnf_namespace }}
 spec:
-  image: "{{ testpmd_app_image }}"
-  imagePullPolicy: "{{ image_pull_policy }}"
-  ethpeerMaclist: "{{ trex_mac_list }}"
-  networks: "{{ networks }}"
-  terminationGracePeriodSeconds: "{{ termination_grace_period_seconds }}"
+  image: {{ testpmd_app_image }}
+  imagePullPolicy: {{ image_pull_policy }}
+  ethpeerMaclist: {{ trex_mac_list }}
+  networks: {{ networks }}
+  terminationGracePeriodSeconds: {{ termination_grace_period_seconds }}
 {% if mac_workaround_enable|default(true) %}
   macWorkaroundEnable: true
-  macWorkaroundImage: "{{ mac_workaround_image }}"
+  macWorkaroundImage: {{ mac_workaround_image }}
   macWorkaroundVersion: "{% if 'v0.0.' in operator_version %}4.4{% else %}{{ ocp_version }}{% endif %}"
 {% endif %}
