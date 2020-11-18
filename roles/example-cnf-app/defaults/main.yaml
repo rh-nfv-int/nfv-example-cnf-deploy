@@ -5,7 +5,7 @@ operator_version: v0.2.0
 app_version: v0.2.0
 registry_url: "jumphost.{{ cluster_name }}.dfwt5g.lab:5000"
 repo_name: nfv-example-cnf
-ocp_version: 4.5
+ocp_version: 4.6
 enable_trex: true
 
 # Internal variables
