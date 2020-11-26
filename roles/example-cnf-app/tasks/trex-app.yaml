@@ -38,6 +38,7 @@
         imagePullPolicy: "{{ image_pull_policy }}"
         networks: "{{ networks_trex }}"
         lbMacs: "{{ lb_gen_port_mac_list }}"
+        cpu: 6
 - name: check trex pod count to be 1
   k8s_info:
     namespace: example-cnf

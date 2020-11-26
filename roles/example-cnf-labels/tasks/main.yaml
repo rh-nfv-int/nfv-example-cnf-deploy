@@ -56,7 +56,7 @@
           - count: 1
             labels:
               examplecnf.openshift.io/lb: ""
-          - count: 2
+          - count: "{{ testpmd_node_count }}"
             labels:
               examplecnf.openshift.io/testpmd: ""
 
