@@ -97,8 +97,6 @@
   delay: 5
   until:
     - testpmdmac.resources|length > 0
-  failed_when:
-    - testpmdmac.resources|length == 0
 
 - name: trex cr block
   when: enable_trex|bool
