@@ -61,7 +61,7 @@
   k8s:
     definition: "{{ lookup('template', 'testpmd-cr.yaml.j2') }}"
 
-- name: check testpmd pod count to be 1
+- name: check testpmd pod count to be greater than 1
   k8s_info:
     namespace: example-cnf
     kind: Pod
@@ -71,9 +71,7 @@
   retries: 60
   delay: 5
   until:
-    - testpmd_pods.resources|length == 1
-  failed_when:
-    - testpmd_pods.resources|length != 1
+    - testpmd_pods.resources|length >= 1
 - name: check testpmd pod status to be running
   k8s_info:
     namespace: example-cnf
@@ -85,8 +83,6 @@
   delay: 5
   until:
     - testpmd_pods.resources[0].status.phase == 'Running'
-  failed_when:
-    - testpmd_pods.resources[0].status.phase != 'Running'
 
 - name: check testpmdmac resource (created by testpmd app)
   k8s_info:
