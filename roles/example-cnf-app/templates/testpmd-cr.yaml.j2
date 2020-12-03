@@ -9,7 +9,7 @@ spec:
   org: "{{ repo_name }}"
   version: "{{ app_version }}"
   imagePullPolicy: {{ image_pull_policy }}
-  ethpeerMaclist: {{ trex_mac_list }}
+  ethpeerMaclist: {{ lb_cnf_port_mac_list }}
   networks: {{ cnf_app_networks }}
   terminationGracePeriodSeconds: {{ termination_grace_period_seconds }}
 {% if mac_workaround_enable|default(true)|bool %}
