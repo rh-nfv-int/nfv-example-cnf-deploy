@@ -26,21 +26,7 @@
 
 - name: create cr for trex
   k8s:
-    api_version: examplecnf.openshift.io/v1
-    kind: TRexConfig
-    namespace: "{{ cnf_namespace }}"
-    name: "{{ trex_cr_name }}"
-    definition:
-      spec:
-        environments:
-          packetRate: 100pps
-        registry: "{{ registry_url }}"
-        org: "{{ repo_name }}"
-        version: "{{ app_version }}"
-        imagePullPolicy: "{{ image_pull_policy }}"
-        networks: "{{ networks_trex }}"
-        lbMacs: "{{ lb_gen_port_mac_list }}"
-        cpu: 6
+    definition: "{{ lookup('template', 'trex-cr.yaml.j2') }}"
 - name: check trex pod count to be 1
   k8s_info:
     namespace: example-cnf
