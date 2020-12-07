@@ -11,19 +11,7 @@
 
 - name: create cr for loadbalancer
   k8s:
-    api_version: examplecnf.openshift.io/v1
-    kind: LoadBalancer
-    namespace: "{{ cnf_namespace }}"
-    name: lb
-    definition:
-      spec:
-        registry: "{{ registry_url }}"
-        org: "{{ repo_name }}"
-        version: "{{ app_version }}"
-        imagePullPolicy: "{{ image_pull_policy }}"
-        cnf_app_networks: "{{ cnf_nw }}"
-        packet_generator_networks: "{{ pack_nw }}"
-        packet_generator_macs: "{{ trex_mac_list }}"
+    definition: "{{ lookup('template', 'lb-cr.yaml.j2') }}"
 
 - name: check loadbalacer pod count to be 1
   k8s_info:

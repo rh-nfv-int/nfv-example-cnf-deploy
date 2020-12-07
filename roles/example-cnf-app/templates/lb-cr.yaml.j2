@@ -1,0 +1,23 @@
+apiVersion: examplecnf.openshift.io/v1
+kind: LoadBalancer
+metadata:
+  name: lb
+  namespace: {{ cnf_namespace }}
+spec:
+  registry: "{{ registry_url }}"
+  org: "{{ repo_name }}"
+  version: "{{ app_version }}"
+  imagePullPolicy: {{ image_pull_policy }}
+  cnf_app_networks: {{ cnf_nw }}
+  packet_generator_networks: {{ pack_nw }}
+  packet_generator_macs: {{ trex_mac_list }}
+  rx_queues: {{ queues|default(1) }}
+  tx_queues: {{ queues|default(1) }}
+  cpu: 10
+  memory: 20Gi
+  hugepage_1gb_count: 16Gi
+  forwarding_cores: 8
+  socket_memory: 4096
+  environments:
+    runApp: 1
+
