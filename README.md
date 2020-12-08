@@ -23,7 +23,7 @@ Deploy
 
 In order to deploy images from quay.io registry, provide extra vars file
 ```
-K8S_AUTH_KUBECONFIG=kubeconfig ansible-playbook create.yaml --extra-vars @quay-repo-v0.2.yaml
+K8S_AUTH_KUBECONFIG=kubeconfig ansible-playbook create.yaml --extra-vars @quay-repo-v2.yaml
 ```
 
 Other Deploy Options

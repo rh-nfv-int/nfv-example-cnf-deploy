@@ -20,7 +20,7 @@
       spec:
         sourceType: grpc
         image: "{{ catalog_image }}"
-        displayName: NFV Example CNF Catalog - v1beta1
+        displayName: NFV Example CNF CataloG
         updateStrategy:
           registryPoll: 
             interval: 30m

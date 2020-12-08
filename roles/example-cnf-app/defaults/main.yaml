@@ -35,7 +35,7 @@ packet_generator_networks:
   - name: intel-numa0-net2
     count: 2
 
-packet_rate: 10pps
+packet_rate: 10kpps
 # some nics like x540 supports only 2 queues, as number of cores will be
 # used to create tx queues, restrict the cores to the trex parameter as per need
 # 540 nics require this value to be set to 2
