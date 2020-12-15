@@ -14,6 +14,21 @@
     state: absent
   loop: "{{ testpmd_crs.resources }}"
 
+- name: list loadbalancer CRs
+  k8s_info:
+    api_version: examplecnf.openshift.io/v1
+    kind: LoadBalancer
+    namespace: "{{ cnf_namespace }}"
+  register: crs
+- name: remove loadbalancer CR
+  k8s:
+    api_version: examplecnf.openshift.io/v1
+    kind: LoadBalancer
+    namespace: "{{ cnf_namespace }}"
+    name: "{{ item.metadata.name }}"
+    state: absent
+  loop: "{{ crs.resources }}"
+
 - name: list trexconfig CRs
   k8s_info:
     api_version: examplecnf.openshift.io/v1
