@@ -7,5 +7,3 @@ repo_name: rh-nfv-int
 version: v0.2.0
 
 testpmd_node_count: 1
-mac_workaround_enable: false
-

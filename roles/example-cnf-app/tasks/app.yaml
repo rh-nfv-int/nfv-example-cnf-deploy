@@ -11,6 +11,25 @@
   poll: 2
   failed_when: "net_list|length == 0"
 
+- name: Get the clusterversion info
+  k8s_info:
+    kind: ClusterVersion
+  register: cluster_version
+- fail:
+    msg: "CluterVersion object version is not available"
+  when: "{{ cluster_version.resources[0].spec.channel|length == 0 }}"
+- name: Parse the major and minor version from channel
+  set_fact:
+    ocp_version: "{{ cluster_version.resources[0].spec.channel.split('-')[1] }}"
+    ocp_major: "{{ cluster_version.resources[0].spec.channel.split('-')[1].split('.')[0] }}"
+    ocp_minor: "{{ cluster_version.resources[0].spec.channel.split('-')[1].split('.')[1] }}"
+- name: Set mac workaround
+  set_fact:
+    mac_workaround_enable: true
+  when:
+    - ocp_major|int == 4
+    - ocp_minor|int <= 5
+
 # Check Label node to run trex
 # label_selectors cannot work with '/' in labels
 - name: get all nodes
