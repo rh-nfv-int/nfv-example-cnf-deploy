@@ -36,7 +36,7 @@
 - name: set the node manage operator pod name
   set_fact:
     node_manage_pod: "{{ item }}"
-  when: "'node-manage-operator' in item.metadata.name" 
+  when: "'node-manage-operator' in item.metadata.name"
   loop: "{{ pods.resources }}"
 - name: ensure node-mangage operator is present
   fail:
@@ -55,8 +55,11 @@
         labelGroup:
           - count: 1
             labels:
-              examplecnf.openshift.io/trex: "" 
-          - count: 2
+              examplecnf.openshift.io/trex: ""
+          - count: 1
             labels:
-              examplecnf.openshift.io/testpmd: "" 
+              examplecnf.openshift.io/lb: ""
+          - count: "{{ testpmd_node_count }}"
+            labels:
+              examplecnf.openshift.io/testpmd: ""
 

@@ -11,23 +11,22 @@
 - name: set networks_trex fact as empty list
   set_fact:
     networks_trex: []
+
+# TODO(skramaja): This logic to be improved for multiple
+# networks, lets fail it if the length is > 1
+- fail:
+    msg: "Need to rewrite the mac merging logic"
+  when: "packet_generator_networks|length != 1"
 - name: create network list for trex with hardcoded macs
   set_fact:
     networks_trex: "{{ networks_trex + [ item | combine({ 'mac': trex_mac_list[idx:idx+item.count] }) ] }}"
-  loop: "{{ networks }}"
+  loop: "{{ packet_generator_networks }}"
   loop_control:
     index_var: idx
+
 - name: create cr for trex
   k8s:
-    api_version: examplecnf.openshift.io/v1
-    kind: TRexConfig
-    namespace: "{{ cnf_namespace }}"
-    name: "{{ trex_cr_name }}"
-    definition:
-      spec:
-        image: "{{ trex_app_image }}"
-        imagePullPolicy: "{{ image_pull_policy }}"
-        networks: "{{ networks_trex }}"
+    definition: "{{ lookup('template', 'trex-cr.yaml.j2') }}"
 - name: check trex pod count to be 1
   k8s_info:
     namespace: example-cnf

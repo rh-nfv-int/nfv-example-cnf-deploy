@@ -1,0 +1,21 @@
+apiVersion: examplecnf.openshift.io/v1
+kind: TRexConfig
+metadata:
+  namespace: {{ cnf_namespace }}
+  name: {{ trex_cr_name }}
+spec:
+  environments:
+    packetRate: {{ packet_rate }}
+{% if trex_core_count|int > 0 %}
+    trexCoreCount: {{ trex_core_count }}
+{% endif %}
+  registry: {{ registry_url }}
+  org: {{ repo_name }}
+  version: {{ app_version }}
+  imagePullPolicy: {{ image_pull_policy }}
+  networks: {{ networks_trex }}
+  enableLb: {{ enable_lb }}
+{% if enable_lb|bool %}  
+  lbMacs: {{ lb_gen_port_mac_list }}
+{% endif %}  
+  cpu: 6

@@ -4,13 +4,20 @@ metadata:
   name: testpmd
   namespace: {{ cnf_namespace }}
 spec:
-  image: {{ testpmd_app_image }}
+  registry: "{{ registry_url }}"
+  org: "{{ repo_name }}"
+  version: "{{ app_version }}"
   imagePullPolicy: {{ image_pull_policy }}
+{% if enable_lb|bool %}
+  ethpeerMaclist: {{ lb_cnf_port_mac_list }}
+  size: 2  
+{% else %}
   ethpeerMaclist: {{ trex_mac_list }}
-  networks: {{ networks }}
+  size: 1  
+{% endif %}
+  networks: {{ cnf_app_networks }}
   terminationGracePeriodSeconds: {{ termination_grace_period_seconds }}
-{% if mac_workaround_enable|default(true) %}
+{% if mac_workaround_enable|default(true)|bool %}
   macWorkaroundEnable: true
-  macWorkaroundImage: {{ mac_workaround_image }}
   macWorkaroundVersion: "{% if 'v0.0.' in operator_version %}4.4{% else %}{{ ocp_version }}{% endif %}"
 {% endif %}

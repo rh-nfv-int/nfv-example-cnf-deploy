@@ -11,7 +11,26 @@
   poll: 2
   failed_when: "net_list|length == 0"
 
-# Label node to run trex
+- name: Get the clusterversion info
+  k8s_info:
+    kind: ClusterVersion
+  register: cluster_version
+- fail:
+    msg: "CluterVersion object version is not available"
+  when: "{{ cluster_version.resources[0].spec.channel|length == 0 }}"
+- name: Parse the major and minor version from channel
+  set_fact:
+    ocp_version: "{{ cluster_version.resources[0].spec.channel.split('-')[1] }}"
+    ocp_major: "{{ cluster_version.resources[0].spec.channel.split('-')[1].split('.')[0] }}"
+    ocp_minor: "{{ cluster_version.resources[0].spec.channel.split('-')[1].split('.')[1] }}"
+- name: Set mac workaround
+  set_fact:
+    mac_workaround_enable: true
+  when:
+    - ocp_major|int == 4
+    - ocp_minor|int <= 5
+
+# Check Label node to run trex
 # label_selectors cannot work with '/' in labels
 - name: get all nodes
   k8s_info:
@@ -22,6 +41,7 @@
   set_fact:
     trex_node_count: 0
     testpmd_node_count: 0
+    lb_node_count: 0
 - name: get all testpmd nodes
   set_fact:
     testpmd_node_count: "{{ testpmd_node_count|int + 1}}"
@@ -32,11 +52,35 @@
     msg: "One of the node should have Label (examplecnf.openshift.io/testpmd='')"
   when: "testpmd_node_count|int == 0"
 
-- name: create cr for testpmd
+- fail:
+    msg: "Need to rewrite the mac merging logic"
+  when: "packet_generator_networks|length != 1 or cnf_app_networks|length != 1"
+- name: set facts of modifying networks
+  set_fact:
+    pack_nw: []
+    cnf_nw: []
+- name: create packet gen network list for lb with hardcoded macs
+  set_fact:
+    pack_nw: "{{ pack_nw + [ item | combine({ 'mac': lb_gen_port_mac_list[idx:idx+item.count] }) ] }}"
+  loop: "{{ packet_generator_networks }}"
+  loop_control:
+    index_var: idx
+- name: create cnf app network list for lb with hardcoded macs
+  set_fact:
+    cnf_nw: "{{ cnf_nw + [ item | combine({ 'mac': lb_cnf_port_mac_list[idx:idx+item.count] }) ] }}"
+  loop: "{{ cnf_app_networks }}"
+  loop_control:
+    index_var: idx
+
+- name: include lb tasks
+  include_tasks: lb-app.yaml
+  when: enable_lb|bool
+
+- name: create cr for cnf application
   k8s:
     definition: "{{ lookup('template', 'testpmd-cr.yaml.j2') }}"
 
-- name: check testpmd pod count to be 1
+- name: check testpmd pod count to be greater than 1
   k8s_info:
     namespace: example-cnf
     kind: Pod
@@ -46,9 +90,7 @@
   retries: 60
   delay: 5
   until:
-    - testpmd_pods.resources|length == 1
-  failed_when:
-    - testpmd_pods.resources|length != 1
+    - testpmd_pods.resources|length >= 1
 - name: check testpmd pod status to be running
   k8s_info:
     namespace: example-cnf
@@ -60,8 +102,6 @@
   delay: 5
   until:
     - testpmd_pods.resources[0].status.phase == 'Running'
-  failed_when:
-    - testpmd_pods.resources[0].status.phase != 'Running'
 
 - name: check testpmdmac resource (created by testpmd app)
   k8s_info:
@@ -72,8 +112,6 @@
   delay: 5
   until:
     - testpmdmac.resources|length > 0
-  failed_when:
-    - testpmdmac.resources|length == 0
 
 - name: trex cr block
   when: enable_trex|bool

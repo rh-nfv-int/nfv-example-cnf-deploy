@@ -1,0 +1,38 @@
+---
+- name: get all loadbalancer nodes
+  set_fact:
+    lb_node_count: "{{ lb_node_count|int + 1}}"
+  when: '"examplecnf.openshift.io/lb" in item["metadata"]["labels"]'
+  loop: "{{ nodes.resources }}"
+  no_log: true
+- fail:
+    msg: "One of the node should have Label (examplecnf.openshift.io/lb='')"
+  when: "lb_node_count|int == 0"
+
+- name: create cr for loadbalancer
+  k8s:
+    definition: "{{ lookup('template', 'lb-cr.yaml.j2') }}"
+
+- name: check loadbalacer pod count to be 1
+  k8s_info:
+    namespace: example-cnf
+    kind: Pod
+    label_selectors:
+      - app=lb
+  register: lb_pods
+  retries: 60
+  delay: 5
+  until:
+    - lb_pods.resources|length == 1
+- name: check loadbalancer pod status to be running
+  k8s_info:
+    namespace: example-cnf
+    kind: Pod
+    label_selectors:
+      - app=lb
+  register: lb_pods
+  retries: 60
+  delay: 5
+  until:
+    - lb_pods.resources[0].status.phase == 'Running'
+

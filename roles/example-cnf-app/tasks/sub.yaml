@@ -1,4 +1,37 @@
 ---
+- name: lb block
+  when: enable_lb|default(true)|bool
+  block:
+  - name: create loadbalancer subscription
+    k8s:
+      api_version: operators.coreos.com/v1alpha1
+      kind: Subscription
+      name: lb-operator-subscription
+      namespace: "{{ cnf_namespace }}"
+      definition:
+        spec:
+          channel: "{{ testpmd_channel }}"
+          name: testpmd-lb-operator
+          source: "{{ catalog_name }}"
+          sourceNamespace: openshift-marketplace
+  - name: set loadbalancer csv name
+    set_fact:
+      lb_csv_name: "testpmd-lb-operator.{{ operator_version }}"
+  - name: get loadbalancer csv
+    k8s_info:
+      api: operators.coreos.com/v1alpha1
+      namespace: "{{ cnf_namespace }}"
+      kind: ClusterServiceVersion
+      name: "{{ lb_csv_name }}"
+    register: csv
+    retries: 30
+    delay: 5
+    until:
+      - "csv.resources|length == 1"
+      - "'status' in csv.resources[0]"
+      - "'phase' in csv.resources[0].status"
+      - "csv.resources[0].status.phase == 'Succeeded'"
+
 - name: create testpmd subscription
   k8s:
     api_version: operators.coreos.com/v1alpha1
@@ -9,19 +42,6 @@
       spec:
         channel: "{{ testpmd_channel }}"
         name: testpmd-operator
-        source: "{{ catalog_name }}"
-        sourceNamespace: openshift-marketplace
-- name: create trex subscription
-  when: enable_trex|bool
-  k8s:
-    api_version: operators.coreos.com/v1alpha1
-    kind: Subscription
-    name: trex-operator-subscription
-    namespace: "{{ cnf_namespace }}"
-    definition:
-      spec:
-        channel: "{{ trex_channel }}"
-        name: trex-operator
         source: "{{ catalog_name }}"
         sourceNamespace: openshift-marketplace
 - name: set testpmd csv name
@@ -36,12 +56,27 @@
   register: csv
   retries: 30
   delay: 5
-  until: "csv.resources|length == 1 and csv.resources[0].status.phase == 'Succeeded'"
-  failed_when: "csv.resources|length != 1 or csv.resources[0].status.phase != 'Succeeded'"
+  until:
+    - "csv.resources|length == 1"
+    - "'status' in csv.resources[0]"
+    - "'phase' in csv.resources[0].status"
+    - "csv.resources[0].status.phase == 'Succeeded'"
 
 - name: trex csv check block
   when: enable_trex|bool
   block:
+  - name: create trex subscription
+    k8s:
+      api_version: operators.coreos.com/v1alpha1
+      kind: Subscription
+      name: trex-operator-subscription
+      namespace: "{{ cnf_namespace }}"
+      definition:
+        spec:
+          channel: "{{ trex_channel }}"
+          name: trex-operator
+          source: "{{ catalog_name }}"
+          sourceNamespace: openshift-marketplace
   - name: set trex csv name
     set_fact:
       trex_csv_name: "trex-operator.{{ operator_version }}"
@@ -54,25 +89,8 @@
     register: csv
     retries: 30
     delay: 5
-    until: "csv.resources|length == 1 and csv.resources[0].status.phase == 'Succeeded'"
-    failed_when: "csv.resources|length != 1 or 'status' not in csv.resources[0] or csv.resources[0].status.phase != 'Succeeded'"
-
-- name: set csv count
-  set_fact:
-    csv_count: 2
-  when: enable_trex|bool
-- name: set csv count for testpmd only
-  set_fact:
-    csv_count: 1
-  when: not enable_trex|bool
-- name: "wait for pod in {{ cnf_namespace }}"
-  k8s_info:
-    kind: Pod
-    namespace: "{{ cnf_namespace }}"
-    field_selectors:
-      - status.phase=Running
-  register: pod_list
-  retries: 30
-  delay: 5
-  until: "pod_list.resources|length >= csv_count"
-  failed_when: "pod_list.resources|length < csv_count"
+    until:
+      - "csv.resources|length == 1"
+      - "'status' in csv.resources[0]"
+      - "'phase' in csv.resources[0].status"
+      - "csv.resources[0].status.phase == 'Succeeded'"
