@@ -15,5 +15,7 @@ spec:
   imagePullPolicy: {{ image_pull_policy }}
   networks: {{ networks_trex }}
   enableLb: {{ enable_lb }}
+{% if enable_lb|bool %}  
   lbMacs: {{ lb_gen_port_mac_list }}
+{% endif %}  
   cpu: 6
