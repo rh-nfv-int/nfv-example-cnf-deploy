@@ -20,7 +20,7 @@
 - name: create network list for trex with hardcoded macs
   set_fact:
     networks_trex: "{{ networks_trex + [ item | combine({ 'mac': trex_mac_list[idx:idx+item.count] }) ] }}"
-  loop: "{{ packet_generator_networks }}"
+  loop: "{{ packet_generator_networks if enable_lb|bool else cnf_app_networks }}"
   loop_control:
     index_var: idx
 
