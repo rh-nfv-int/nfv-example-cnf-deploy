@@ -1,13 +1,4 @@
 ---
-- name: get all trex nodes
-  set_fact:
-    trex_node_count: "{{ trex_node_count|int + 1}}"
-  when: '"examplecnf.openshift.io/trex" in item["metadata"]["labels"]'
-  loop: "{{ nodes.resources }}"
-  no_log: true
-- fail:
-    msg: "One of the node should have Label (examplecnf.openshift.io/trex='')"
-  when: "trex_node_count|int == 0"
 - name: set local fact for trex pod networks
   set_fact:
     networks_trex: []
@@ -32,7 +23,7 @@
     namespace: example-cnf
     kind: Pod
     label_selectors:
-      - app=trex
+      - example-cnf-type=pkt-gen
   register: trex_pods
   retries: 60
   delay: 5
@@ -45,7 +36,7 @@
     namespace: example-cnf
     kind: Pod
     label_selectors:
-      - app=trex
+      - example-cnf-type=pkt-gen
   register: trex_pods
   retries: 60
   delay: 5

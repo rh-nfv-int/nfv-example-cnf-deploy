@@ -64,7 +64,7 @@
     kind: Pod
     namespace: example-cnf
     label_selectors:
-      - app=testpmd
+      - example-cnf-type=cnf-app
   register: testpmd_pod
 - name: fail if the testpmd pod is not found
   fail:
@@ -97,7 +97,7 @@
     namespace: example-cnf
     kind: Pod
     label_selectors:
-      - app=testpmd
+      - example-cnf-type=cnf-app
   register: testpmd_pods
   retries: 60
   delay: 5

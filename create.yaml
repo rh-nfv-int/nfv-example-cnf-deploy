@@ -5,6 +5,4 @@
     - import_role:
         name: example-cnf-catalog
     - import_role:
-        name: example-cnf-labels
-    - import_role:
         name: example-cnf-app

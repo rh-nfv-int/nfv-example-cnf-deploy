@@ -30,31 +30,28 @@
     - ocp_major|int == 4
     - ocp_minor|int <= 5
 
-# Check Label node to run trex
-# label_selectors cannot work with '/' in labels
 - name: get all nodes
   k8s_info:
     kind: Node
   register: nodes
   no_log: true
-- name: reset node count
-  set_fact:
-    trex_node_count: 0
-    testpmd_node_count: 0
-    lb_node_count: 0
-- name: get all testpmd nodes
-  set_fact:
-    testpmd_node_count: "{{ testpmd_node_count|int + 1}}"
-  when: '"examplecnf.openshift.io/testpmd" in item["metadata"]["labels"]'
-  loop: "{{ nodes.resources }}"
-  no_log: true
 - fail:
-    msg: "One of the node should have Label (examplecnf.openshift.io/testpmd='')"
-  when: "testpmd_node_count|int == 0"
+    msg: "Minimum 2 worker nodes are required to run example-cnf applications"
+  when: "nodes.resources|length < 2"
 
 - fail:
-    msg: "Need to rewrite the mac merging logic"
-  when: "packet_generator_networks|length != 1 or cnf_app_networks|length != 1"
+    msg: "'packet_generator_networks' is required when deployed with LB"
+  when:
+    - "enable_lb|bool"
+    - "packet_generator_networks|length == 0"
+- fail:
+    msg: "'cnf_app_networks' is required"
+  when:
+    - "cnf_app_networks|length == 0"
+- fail:
+    msg: "MAC merging is not supported with multiple networks"
+  when: "cnf_app_networks|length > 1 or (enable_lb|bool and packet_generator_networks|length > 1)"
+
 - name: set facts of modifying networks
   set_fact:
     pack_nw: []
@@ -85,7 +82,7 @@
     namespace: example-cnf
     kind: Pod
     label_selectors:
-      - app=testpmd
+      - example-cnf-type=cnf-app
   register: testpmd_pods
   retries: 60
   delay: 5
@@ -96,7 +93,7 @@
     namespace: example-cnf
     kind: Pod
     label_selectors:
-      - app=testpmd
+      - example-cnf-type=cnf-app
   register: testpmd_pods
   retries: 60
   delay: 5
