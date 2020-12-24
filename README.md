@@ -9,14 +9,6 @@ OpenShift 4 Cluster should be deployed with  additional operators:
  * Performance Addon operator should be deployed and a `PerformanceProfile`
    should be created.
 
-Label the nodes before deploying the example cnf:
-```
-oc label node worker-0 examplecnf.openshift.io/trex=""
-oc label node worker-1 examplecnf.openshift.io/testpmd=""
-oc label node worker-1 examplecnf.openshift.io/lb=""
-```
-NOTE: Role `example-cnf-labels` will label the nodes, if it needs to be automated.
-
 
 Deploy
 ======

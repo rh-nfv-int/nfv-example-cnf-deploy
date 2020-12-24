@@ -15,9 +15,6 @@
     - name: create catalog
       import_role:
         name: example-cnf-catalog
-    - name: create labels
-      import_role:
-        name: example-cnf-labels
     - name: create app
       import_role:
         name: example-cnf-app
