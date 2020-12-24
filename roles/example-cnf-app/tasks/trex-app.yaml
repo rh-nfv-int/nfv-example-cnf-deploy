@@ -8,19 +8,19 @@
 - fail:
     msg: "One of the node should have Label (examplecnf.openshift.io/trex='')"
   when: "trex_node_count|int == 0"
-- name: set networks_trex fact as empty list
+- name: set local fact for trex pod networks
   set_fact:
     networks_trex: []
-
+    packet_gen_net: "{{ packet_generator_networks if enable_lb|bool else cnf_app_networks }}"
 # TODO(skramaja): This logic to be improved for multiple
 # networks, lets fail it if the length is > 1
 - fail:
     msg: "Need to rewrite the mac merging logic"
-  when: "packet_generator_networks|length != 1"
+  when: "packet_gen_net|length != 1"
 - name: create network list for trex with hardcoded macs
   set_fact:
     networks_trex: "{{ networks_trex + [ item | combine({ 'mac': trex_mac_list[idx:idx+item.count] }) ] }}"
-  loop: "{{ packet_generator_networks }}"
+  loop: "{{ packet_gen_net }}"
   loop_control:
     index_var: idx
 
