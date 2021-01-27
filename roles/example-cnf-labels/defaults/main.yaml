@@ -1,6 +1,0 @@
----
-operator_version: v0.2.1
-cnf_namespace: example-cnf
-catalog_name: nfv-example-cnf-catalog
-
-testpmd_node_count: 2

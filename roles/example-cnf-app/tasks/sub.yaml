@@ -1,4 +1,37 @@
 ---
+- name: mac block
+  when: enable_mac_fetch|default(true)|bool
+  block:
+  - name: create mac fetch subscription
+    k8s:
+      api_version: operators.coreos.com/v1alpha1
+      kind: Subscription
+      name: mac-fetch-operator-subscription
+      namespace: "{{ cnf_namespace }}"
+      definition:
+        spec:
+          channel: "{{ testpmd_channel }}"
+          name: cnf-app-mac-operator
+          source: "{{ catalog_name }}"
+          sourceNamespace: openshift-marketplace
+  - name: set mac fetch csv name
+    set_fact:
+      csv_name: "cnf-app-mac-operator.{{ operator_version }}"
+  - name: get mac fetch csv
+    k8s_info:
+      api: operators.coreos.com/v1alpha1
+      namespace: "{{ cnf_namespace }}"
+      kind: ClusterServiceVersion
+      name: "{{ csv_name }}"
+    register: csv
+    retries: 30
+    delay: 5
+    until:
+      - "csv.resources|length == 1"
+      - "'status' in csv.resources[0]"
+      - "'phase' in csv.resources[0].status"
+      - "csv.resources[0].status.phase == 'Succeeded'"
+
 - name: lb block
   when: enable_lb|default(true)|bool
   block:

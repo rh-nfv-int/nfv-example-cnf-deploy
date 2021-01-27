@@ -1,4 +1,8 @@
 ---
+- name: check operator version
+  fail:
+    msg: "operator_version is required"
+  when: "operator_version|length == 0"
 - name: check if catalogsource crd is present
   k8s_info:
     kind: CustomResourceDefinition

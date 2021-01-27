@@ -100,15 +100,15 @@
   until:
     - testpmd_pods.resources[0].status.phase == 'Running'
 
-- name: check testpmdmac resource (created by testpmd app)
+- name: check cnfappmac resource (created by testpmd app)
   k8s_info:
     namespace: example-cnf
-    kind: TestPMDMac
-  register: testpmdmac
+    kind: CNFAppMac
+  register: mac
   retries: 120
   delay: 5
   until:
-    - testpmdmac.resources|length > 0
+    - mac.resources|length > 0
 
 - name: trex cr block
   when: enable_trex|bool

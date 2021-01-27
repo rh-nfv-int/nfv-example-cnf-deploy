@@ -87,8 +87,26 @@
   k8s_info:
     namespace: "{{ cnf_namespace }}"
     kind: Pod
+    field_selectors:
+      - status.phase!=Succeeded
   register: pod_list
   retries: 60
   delay: 5
   until: pod_list.resources|length == 0
   failed_when: pod_list.resources|length != 0
+
+- name: get completed pods
+  k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: Pod
+    field_selectors:
+      - status.phase=Succeeded
+  register: pod_list
+
+- name: remove completed pods
+  k8s:
+    namespace: "{{ cnf_namespace }}"
+    kind: Pod
+    name: "{{ item.metadata.name }}"
+    state: absent
+  loop: "{{ pod_list.resources }}"

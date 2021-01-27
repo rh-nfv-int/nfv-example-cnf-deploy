@@ -1,4 +1,13 @@
 ---
+- name: check operator version
+  fail:
+    msg: "operator_version is required"
+  when: "operator_version|length == 0"
+- name: check app version
+  fail:
+    msg: "app_version is required"
+  when: "app_version|length == 0"
+
 - include_tasks: sub.yaml
 - include_tasks: app.yaml
 

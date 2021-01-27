@@ -1,8 +1,8 @@
 ---
 # Customizable variables
 cluster_name: cluster5
-operator_version: v0.2.1
-app_version: v0.2.0
+operator_version: ""
+app_version: ""
 registry_url: "jumphost.{{ cluster_name }}.dfwt5g.lab:5000"
 repo_name: nfv-example-cnf
 enable_trex: true
