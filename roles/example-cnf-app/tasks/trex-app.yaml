@@ -15,9 +15,15 @@
   loop_control:
     index_var: idx
 
-- name: create cr for trex
+- name: create cr for trex server
   k8s:
     definition: "{{ lookup('template', 'trex-cr.yaml.j2') }}"
+- name: create cr for trex app
+  k8s:
+    definition: "{{ lookup('template', 'trex-cr.yaml.j2') }}"
+  vars:
+    trex_cr_name: trex-app1
+    kind: TRexApp
 - name: check trex pod count to be 1
   k8s_info:
     namespace: example-cnf
@@ -28,9 +34,7 @@
   retries: 60
   delay: 5
   until:
-    - trex_pods.resources|length == 1
-  failed_when:
-    - trex_pods.resources|length != 1
+    - trex_pods.resources|length >= 1
 - name: check trex pod status to be running
   k8s_info:
     namespace: example-cnf
