@@ -26,7 +26,7 @@
     kind: TRexApp
 - name: check trex pod count to be 1
   k8s_info:
-    namespace: example-cnf
+    namespace: "{{ cnf_namespace }}"
     kind: Pod
     label_selectors:
       - example-cnf-type=pkt-gen
@@ -37,7 +37,7 @@
     - trex_pods.resources|length >= 1
 - name: check trex pod status to be running
   k8s_info:
-    namespace: example-cnf
+    namespace: "{{ cnf_namespace }}"
     kind: Pod
     label_selectors:
       - example-cnf-type=pkt-gen
@@ -54,7 +54,7 @@
 # Ensure there is atleast one patcket matched event
 - name: get packet matched event from trex
   k8s_info:
-    namespace: example-cnf
+    namespace: "{{ cnf_namespace }}"
     kind: Event
     field_selectors:
       - reason==PacketMatched

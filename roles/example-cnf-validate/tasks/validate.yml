@@ -7,7 +7,7 @@
 
 - name: get trexconfig matched events
   k8s_info:
-    namespace: example-cnf
+    namespace: "{{ cnf_namespace }}"
     kind: Event
     field_selectors:
       - reason==PacketMatched
@@ -15,7 +15,7 @@
   no_log: true
 - name: get trexconfig dropped events
   k8s_info:
-    namespace: example-cnf
+    namespace: "{{ cnf_namespace }}"
     kind: Event
     field_selectors:
       - reason==PacketDropped

@@ -1,7 +1,7 @@
 ---
 - name: get TestPMD CR info
   k8s_info:
-    namespace: example-cnf
+    namespace: "{{ cnf_namespace }}"
     kind: TestPMD
   register: testpmd_list
 - name: validate number of TestPMD CRs
@@ -13,7 +13,7 @@
     testpmd_cr_name: "{{ testpmd_list.resources[0].metadata.name }}"
 - name: get TRexConfig CR info
   k8s_info:
-    namespace: example-cnf
+    namespace: "{{ cnf_namespace }}"
     kind: TRexConfig
   register: trex_list
 - name: validate number of TRexConfig CRs
@@ -27,7 +27,7 @@
 # Ensure there is atleast one patcket matched event
 - name: get packet matched event from trex
   k8s_info:
-    namespace: example-cnf
+    namespace: "{{ cnf_namespace }}"
     kind: Event
     field_selectors:
       - reason==PacketMatched
@@ -42,7 +42,7 @@
 - name: get testpmd pod
   k8s_info:
     kind: Pod
-    namespace: example-cnf
+    namespace: "{{ cnf_namespace }}"
     label_selectors:
       - example-cnf-type=cnf-app
   register: testpmd_pod
@@ -67,14 +67,14 @@
 - name: delete the testpmd pod
   k8s:
     kind: Pod
-    namespace: example-cnf
+    namespace: "{{ cnf_namespace }}"
     name: "{{ testpmd_existing_pod_name }}"
     state: absent
     wait: yes
     wait_timeout: 300
 - name: check testpmd pod count to be 1 and running
   k8s_info:
-    namespace: example-cnf
+    namespace: "{{ cnf_namespace }}"
     kind: Pod
     label_selectors:
       - example-cnf-type=cnf-app

@@ -5,7 +5,7 @@
 
 - name: check loadbalacer pod count to be 1
   k8s_info:
-    namespace: example-cnf
+    namespace: "{{ cnf_namespace }}"
     kind: Pod
     label_selectors:
       - example-cnf-type=lb-app
@@ -16,7 +16,7 @@
     - lb_pods.resources|length == 1
 - name: check loadbalancer pod status to be running
   k8s_info:
-    namespace: example-cnf
+    namespace: "{{ cnf_namespace }}"
     kind: Pod
     label_selectors:
       - example-cnf-type=lb-app
