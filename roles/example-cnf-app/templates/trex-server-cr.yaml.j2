@@ -1,15 +1,15 @@
 apiVersion: examplecnf.openshift.io/v1
-kind: {{ kind|default('TRexConfig') }}
+kind: TRexConfig
 metadata:
   namespace: {{ cnf_namespace }}
   name: {{ trex_cr_name }}
+  annotations:
+    "ansible.sdk.operatorframework.io/verbosity": "0"
 spec:
-  environments:
-    packetRate: {{ packet_rate }}
 {% if trex_core_count|int > 0 %}
+  environments:
     trexCoreCount: {{ trex_core_count }}
 {% endif %}
-    serverUrl: trex-server
   registry: {{ registry_url }}
   org: {{ repo_name }}
   version: {{ app_version }}

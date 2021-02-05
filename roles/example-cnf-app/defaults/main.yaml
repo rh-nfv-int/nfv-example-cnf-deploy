@@ -35,3 +35,14 @@ packet_rate: 10kpps
 # used to create tx queues, restrict the cores to the trex parameter as per need
 # 540 nics require this value to be set to 2
 trex_core_count: 0
+
+# When duration is '-1', the trex will run in continous burst mode
+trex_test_config: []
+
+#  - name: pkt-64-10kpps
+#    packet_size: 64
+#    packet_rate: 10kpps
+#    duration: 120
+#    trex_profile_name: ''
+#    trex_profile_path: ''
+#    trex_profile_cm_name: ''

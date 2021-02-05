@@ -129,10 +129,13 @@
           include_tasks: trex-app.yaml
       when:
         - "trex_retry|default(true)|bool"
-        - "trex_matched_event is defined"
-        - "'resources' in trex_matched_event"
-        - "trex_matched_event.resources|length == 0"
-    - name: fail if no packet matched event is found from trex
+        - "not trex_app_run_passed|default(false)|bool"
+    - name: fail if trex is not passed
       fail:
-        msg: "PacketMatched event is not found in TRexConfig CR"
-      when: trex_matched_event.resources|length == 0
+        msg: "TRex App Run has failed!!"
+      when: not trex_app_run_passed|default(false)|bool
+    - name: run additional tests
+      include_tasks: trex-profile.yaml
+      loop: "{{ trex_test_config }}"
+      loop_control:
+        loop_var: trex_test_config_item 

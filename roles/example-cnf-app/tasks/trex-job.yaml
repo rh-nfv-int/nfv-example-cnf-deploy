@@ -1,0 +1,53 @@
+---
+- name: fail if app_version is not defined
+  fail:
+    msg: "app_version is required"
+  when: app_version is not defined
+- name: get the list of incomplete jobs
+  k8s_info:
+    kind: Job
+    api_version: batch/v1
+    label_selectors:
+    - example-cnf-type=pkt-gen-app
+    field_selectors:
+    - status.successful!=1
+  register: jobs_running
+- name: set default active job fact
+  set_fact:
+    active_jobs: 0
+- name: find active jobs 
+  set_fact:
+    active_jobs: "{{ active_jobs + 1 }}"
+  loop: "{{ jobs_running.resources }}"
+  when: "item.status.failed != 1"
+- name: fail if any one of pkt gen job is running
+  fail:
+    msg: "All pkt gen job should be complete before starting next"
+  when: "active_jobs|int > 0"
+- name: log the test config
+  debug:
+    var: test_config_item
+- name: set the image name
+  set_fact:
+    image_app: "{{ registry_url }}/{{ repo_name }}/trex-container-app:{{ app_version }}"
+  when: image_app is not defined
+- name: create job for the provided test config
+  k8s:
+    definition: "{{ lookup('template', 'trex-app-job.yaml.j2') }}"
+  vars:
+    environments: "{{ test_config_item }}"
+    trex_app_job_name: "{{ test_config_item.name|default('test-' + 1000|random|string) }}"    
+- name: wait for the job to complete
+  k8s_info:
+    kind: Job
+    api_version: batch/v1
+    label_selectors:
+    - example-cnf-type=pkt-gen-app
+    field_selectors:
+    - status.successful!=1
+  register: jobs_running
+  retries: 120
+  delay: 5
+  until: jobs_running.resources|length == 0
+- debug: 
+    msg: "{{ jobs_running.resources|length }}"

@@ -3,6 +3,7 @@
   set_fact:
     networks_trex: []
     packet_gen_net: "{{ packet_generator_networks if enable_lb|bool else cnf_app_networks }}"
+    trex_app_run_passed: false
 # TODO(skramaja): This logic to be improved for multiple
 # networks, lets fail it if the length is > 1
 - fail:
@@ -17,24 +18,7 @@
 
 - name: create cr for trex server
   k8s:
-    definition: "{{ lookup('template', 'trex-cr.yaml.j2') }}"
-- name: create cr for trex app
-  k8s:
-    definition: "{{ lookup('template', 'trex-cr.yaml.j2') }}"
-  vars:
-    trex_cr_name: trex-app1
-    kind: TRexApp
-- name: check trex pod count to be 1
-  k8s_info:
-    namespace: "{{ cnf_namespace }}"
-    kind: Pod
-    label_selectors:
-      - example-cnf-type=pkt-gen
-  register: trex_pods
-  retries: 60
-  delay: 5
-  until:
-    - trex_pods.resources|length >= 1
+    definition: "{{ lookup('template', 'trex-server-cr.yaml.j2') }}"
 - name: check trex pod status to be running
   k8s_info:
     namespace: "{{ cnf_namespace }}"
@@ -45,18 +29,51 @@
   retries: 60
   delay: 5
   until:
-    - trex_pods.resources[0].status.phase == 'Running'
-  failed_when:
-    - trex_pods.resources[0].status.phase != 'Running'
-- name: wait for 30 seconds to stabilize trex output
-  pause:
-    seconds: 30
-# Ensure there is atleast one patcket matched event
-- name: get packet matched event from trex
+    - "trex_pods.resources|length > 0"
+    - "'status' in trex_pods.resources[0]"
+    - "'phase' in trex_pods.resources[0].status"
+    - "trex_pods.resources[0].status.phase == 'Running'"
+
+- name: set trex app cr name
+  set_fact:
+    trex_app_cr_name: trex-app1
+- name: create cr for trex app
+  k8s:
+    definition: "{{ lookup('template', 'trex-app-cr.yaml.j2') }}"
+- name: wait for trex app run start event
   k8s_info:
     namespace: "{{ cnf_namespace }}"
     kind: Event
     field_selectors:
-      - reason==PacketMatched
-  register: trex_matched_event
+      - "reason==TestStarted"
+      - "involvedObject.name={{ trex_app_cr_name }}"
+  register: trex_event
   no_log: true
+  retries: 10
+  delay: 2
+
+- name: wait trex app run complete event
+  k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: Event
+    field_selectors:
+      - "reason==TestCompleted"
+      - "involvedObject.name={{ trex_app_cr_name }}"
+  register: trex_event
+  no_log: true
+  retries: 60
+  delay: 5
+  until: trex_event.resources|length > 0
+- name: get test passed event from trex
+  k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: Event
+    field_selectors:
+      - "reason==TestPassed"
+      - "involvedObject.name={{ trex_app_cr_name }}"
+  register: trex_pass_event
+  no_log: true
+- name: set trex run status if passed
+  set_fact:
+    trex_app_run_passed: true
+  when: trex_pass_event.resources|length > 0

@@ -44,6 +44,21 @@
     state: absent
   loop: "{{ trexconfig_crs.resources }}"
 
+- name: list trexapp CRs
+  k8s_info:
+    api_version: examplecnf.openshift.io/v1
+    kind: TRexApp
+    namespace: "{{ cnf_namespace }}"
+  register: trexapp_crs
+- name: remove trexapp CR
+  k8s:
+    api_version: examplecnf.openshift.io/v1
+    kind: TRexApp
+    namespace: "{{ cnf_namespace }}"
+    name: "{{ item.metadata.name }}"
+    state: absent
+  loop: "{{ trexapp_crs.resources }}"
+
 - name: list subscription
   k8s_info:
     api_version: operators.coreos.com/v1alpha1
@@ -83,6 +98,19 @@
     state: absent
   when: remove_catalog_source is defined and remove_catalog_source
 
+- name: get jobs
+  k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: Job
+  register: job_list
+- name: remove jobs
+  k8s:
+    namespace: "{{ cnf_namespace }}"
+    kind: Job
+    name: "{{ item.metadata.name }}"
+    state: absent
+  loop: "{{ job_list.resources }}"
+
 - name: ensure all pods are deleteted
   k8s_info:
     namespace: "{{ cnf_namespace }}"
@@ -102,7 +130,6 @@
     field_selectors:
       - status.phase=Succeeded
   register: pod_list
-
 - name: remove completed pods
   k8s:
     namespace: "{{ cnf_namespace }}"

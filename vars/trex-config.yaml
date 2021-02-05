@@ -1,0 +1,39 @@
+---
+trex_test_config:
+  - name: pkt-64-10kpps
+    packet_size: 64
+    packet_rate: 10kpps
+    duration: 120
+  - name: pkt-256-10kpps
+    packet_size: 256
+    packet_rate: 10kpps
+    duration: 120
+  - name: pkt-512-10kpps
+    packet_size: 512
+    packet_rate: 10kpps
+    duration: 120
+  - name: pkt-1024-10kpps
+    packet_size: 1024
+    packet_rate: 10kpps
+    duration: 120
+  - name: pkt-1400-10kpps
+    packet_size: 1400
+    packet_rate: 10kpps
+    duration: 120
+  - name: pkt-1500-10kpps
+    packet_size: 1500
+    packet_rate: 10kpps
+    duration: 120
+  - name: custom-simple-3st
+    packet_rate: 10kpps
+    duration: 120
+    trex_profile_path: "trexprofiles/simple_3st.py"
+    trex_profile_name: "simple_3st.py"
+  - name: udp-1pkt-mac-step
+    packet_rate: 10kpps
+    duration: 120
+    trex_profile_name: "udp_1pkt_mac_step.py"
+  - name: pkt-64-10kpps-2hrs
+    packet_size: 64
+    packet_rate: 10kpps
+    duration: 7200 

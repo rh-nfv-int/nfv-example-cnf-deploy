@@ -1,0 +1,61 @@
+---
+- set_fact:
+    trex_profile_path: "{{ trex_test_config_item.trex_profile_path|default('') }}"
+    trex_profile_name: "{{ trex_test_config_item.trex_profile_name|default('') }}"
+    trex_profile_cm_name: "{{ trex_test_config_item.trex_profile_cm_name|default('') }}"
+    random_str: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=5') }}"
+- name: set packet rate if defined
+  set_fact:
+    packet_rate: "{{ trex_test_config_item.packet_rate }}"
+  when: "'packet_rate' in trex_test_config_item"
+- name: set packet size if defined
+  set_fact:
+    packet_size: "{{ trex_test_config_item.packet_size }}"
+  when: "'packet_size' in trex_test_config_item"
+- name: set duration if defined
+  set_fact:
+    duration: "{{ trex_test_config_item.duration }}"
+  when: "'duration' in trex_test_config_item"
+- name: create configmap for trex profile if provided
+  when: trex_profile_path|default('')|length > 0
+  block:
+  - name: check if trex_profile_path is valid
+    stat:
+      path: "{{ trex_profile_path }}"
+    register: path_stat
+  - name: fail if the path does not existt
+    fail:
+      msg: "Provide a valid file - {{ trex_profile_path }}"
+    when: not path_stat.stat.exists
+  - name: set cm name for trex profile
+    set_fact:
+      trex_profile_cm_name: "{{ 'trex-profile-' + random_str }}"
+      trex_profile_name: "{{ trex_profile_path|basename }}"
+  - name: create config map
+    k8s:
+      definition:
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          namespace: "{{ cnf_namespace }}"
+          name: "{{ trex_profile_cm_name }}"
+        data:
+          name: "{{ trex_profile_name }}"
+          content: |
+            {{ lookup('file', trex_profile_path) }}
+- name: create job for trex app
+  include_tasks: trex-job.yaml
+  when: enable_trex_profile_direct|default(false)|bool
+- name: set trex app cr name
+  set_fact:
+    trex_app_cr_name: "trex-app-{{ trex_test_config_item.name }}"
+  when: "'name' in trex_test_config_item"
+- name: set trex app cr name - random
+  set_fact:
+    trex_app_cr_name: "trex-app-{{ random_str }}"
+  when: "'name' not in trex_test_config_item"
+- name: create cr for trex app
+  k8s:
+    definition: "{{ lookup('template', 'trex-app-cr.yaml.j2') }}"
+  when: not enable_trex_profile_direct|default(false)|bool
+

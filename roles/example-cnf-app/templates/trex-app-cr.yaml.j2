@@ -1,0 +1,28 @@
+apiVersion: examplecnf.openshift.io/v1
+kind: TRexApp
+metadata:
+  namespace: {{ cnf_namespace }}
+  name: {{ trex_app_cr_name }}
+  annotations:
+    "ansible.sdk.operatorframework.io/verbosity": "1"
+    "ansible.sdk.operatorframework.io/reconcile-period": "1m"
+spec:
+{% if packet_rate|default('') %}
+  packetRate: {{ packet_rate }}
+{% endif %}
+{% if duration|default(None) %}
+  duration: {{ duration }}
+{% endif %}
+{% if packet_size|default('') %}
+  packetSize: {{ packet_size }}
+{% endif %}
+  registry: {{ registry_url }}
+  org: {{ repo_name }}
+  version: {{ app_version }}
+  imagePullPolicy: {{ image_pull_policy }}
+  enableLb: {{ enable_lb }}
+{% if enable_lb|bool %}  
+  lbMacs: {{ lb_gen_port_mac_list }}
+{% endif %}  
+  trexProfileConfigMap: {{ trex_profile_cm_name|default('') }}
+  trexProfileName: {{ trex_profile_name|default('') }}
