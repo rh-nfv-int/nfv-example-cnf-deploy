@@ -1,0 +1,29 @@
+---
+- name: check block
+  when: "not job_done|bool"
+  block:
+  - name: get the list of incomplete jobs
+    k8s_info:
+      kind: Job
+      api_version: batch/v1
+      label_selectors:
+      - example-cnf-type=pkt-gen-app
+      field_selectors:
+      - status.successful!=1
+    register: jobs_running
+  - name: set default active job fact
+    set_fact:
+      active_jobs: 0
+  - name: find active jobs 
+    set_fact:
+      active_jobs: "{{ active_jobs + 1 }}"
+    loop: "{{ jobs_running.resources }}"
+    when: "'failed' not in item.status or item.status.failed != 1"
+  - name: set job complete
+    set_fact:
+      job_done: true
+    when: "active_jobs|int == 0"
+  - name: wait for next check
+    pause:
+      seconds: 300
+    when: "active_jobs|int > 0"

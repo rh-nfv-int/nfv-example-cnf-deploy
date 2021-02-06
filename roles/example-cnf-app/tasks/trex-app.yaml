@@ -40,6 +40,10 @@
 - name: create cr for trex app
   k8s:
     definition: "{{ lookup('template', 'trex-app-cr.yaml.j2') }}"
+  vars:
+    packet_rate: 10kpps
+    packet_size: 64
+    duration: 120
 - name: wait for trex app run start event
   k8s_info:
     namespace: "{{ cnf_namespace }}"

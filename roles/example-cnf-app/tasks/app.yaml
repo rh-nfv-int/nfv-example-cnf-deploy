@@ -138,4 +138,16 @@
       include_tasks: trex-profile.yaml
       loop: "{{ trex_test_config }}"
       loop_control:
-        loop_var: trex_test_config_item 
+        loop_var: trex_test_config_item
+    - name: wait for all job creation
+      pause:
+        seconds: 30
+    - set_fact:
+        job_done: false
+    - name: wait for job complete (success/failure)
+      include_tasks: job-check.yaml
+      loop: "{{ range(0, 60, 1)|list }}"
+    - name: fail if job is not completed
+      fail:
+        msg: "Some of the TRexApp Jobs has failed"
+      when: "not job_done|bool"
