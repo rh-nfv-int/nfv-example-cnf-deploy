@@ -134,20 +134,6 @@
       fail:
         msg: "TRex App Run has failed!!"
       when: not trex_app_run_passed|default(false)|bool
-    - name: run additional tests
-      include_tasks: trex-profile.yaml
-      loop: "{{ trex_test_config }}"
-      loop_control:
-        loop_var: trex_test_config_item
-    - name: wait for all job creation
-      pause:
-        seconds: 30
-    - set_fact:
-        job_done: false
-    - name: wait for job complete (success/failure)
-      include_tasks: job-check.yaml
-      loop: "{{ range(0, 60, 1)|list }}"
-    - name: fail if job is not completed
-      fail:
-        msg: "Some of the TRexApp Jobs has failed"
-      when: "not job_done|bool"
+    - name: trex additional tests
+      include_tasks: trex-tests.yaml
+      when: "trex_test_config|length > 0 and not continous_burst_mode|bool"

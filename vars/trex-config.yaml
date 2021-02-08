@@ -29,11 +29,16 @@ trex_test_config:
     duration: 120
     trex_profile_path: "trexprofiles/simple_3st.py"
     trex_profile_name: "simple_3st.py"
+  - name: custom-multi-flow
+    packet_rate: 10kpps
+    duration: 120
+    trex_profile_path: "trexprofiles/multi_flow.py"
+    trex_profile_name: "multi_flow.py"
   - name: udp-1pkt-mac-step
     packet_rate: 10kpps
     duration: 120
     trex_profile_name: "udp_1pkt_mac_step.py"
-  - name: pkt-64-10kpps-2hrs
+  - name: pkt-64-10kpps-10min
     packet_size: 64
     packet_rate: 10kpps
-    duration: 7200 
+    duration: 600

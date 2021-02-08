@@ -37,13 +37,17 @@
 - name: set trex app cr name
   set_fact:
     trex_app_cr_name: trex-app1
+    duration: 120
+- name: set continous burst mode vars
+  set_fact:
+    duration: -1
+  when: "continous_burst_mode|bool"
 - name: create cr for trex app
   k8s:
     definition: "{{ lookup('template', 'trex-app-cr.yaml.j2') }}"
   vars:
     packet_rate: 10kpps
     packet_size: 64
-    duration: 120
 - name: wait for trex app run start event
   k8s_info:
     namespace: "{{ cnf_namespace }}"
@@ -52,7 +56,6 @@
       - "reason==TestStarted"
       - "involvedObject.name={{ trex_app_cr_name }}"
   register: trex_event
-  no_log: true
   retries: 10
   delay: 2
 
@@ -64,10 +67,10 @@
       - "reason==TestCompleted"
       - "involvedObject.name={{ trex_app_cr_name }}"
   register: trex_event
-  no_log: true
   retries: 60
   delay: 5
   until: trex_event.resources|length > 0
+  when: "not continous_burst_mode|bool"
 - name: get test passed event from trex
   k8s_info:
     namespace: "{{ cnf_namespace }}"
@@ -75,9 +78,21 @@
     field_selectors:
       - "reason==TestPassed"
       - "involvedObject.name={{ trex_app_cr_name }}"
-  register: trex_pass_event
-  no_log: true
+  register: trex_result
+  when: "not continous_burst_mode|bool"
+- name: get packet matched event from trex
+  k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: Event
+    field_selectors:
+      - "reason==PacketMatched"
+      - "involvedObject.name={{ trex_app_cr_name }}"
+  register: trex_result
+  retries: 10
+  delay: 5
+  until: "trex_result.resources|length > 0"
+  when: "continous_burst_mode|bool"
 - name: set trex run status if passed
   set_fact:
     trex_app_run_passed: true
-  when: trex_pass_event.resources|length > 0
+  when: trex_result.resources|length > 0

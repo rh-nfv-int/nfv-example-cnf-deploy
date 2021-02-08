@@ -4,6 +4,9 @@
     trex_profile_name: "{{ trex_test_config_item.trex_profile_name|default('') }}"
     trex_profile_cm_name: "{{ trex_test_config_item.trex_profile_cm_name|default('') }}"
     random_str: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=5') }}"
+    packet_rate: ''
+    packet_size: ''
+    duration: ''
 - name: set packet rate if defined
   set_fact:
     packet_rate: "{{ trex_test_config_item.packet_rate }}"

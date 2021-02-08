@@ -37,8 +37,6 @@ packet_rate: 10kpps
 trex_core_count: 0
 
 # When duration is '-1', the trex will run in continous burst mode
-trex_test_config: []
-
 #  - name: pkt-64-10kpps
 #    packet_size: 64
 #    packet_rate: 10kpps
@@ -46,3 +44,6 @@ trex_test_config: []
 #    trex_profile_name: ''
 #    trex_profile_path: ''
 #    trex_profile_cm_name: ''
+trex_test_config: []
+
+continous_burst_mode: false
