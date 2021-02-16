@@ -1,0 +1,64 @@
+---
+- name: get cnf app pod
+  k8s_info:
+    kind: Pod
+    namespace: "{{ cnf_namespace }}"
+    label_selectors:
+      - example-cnf-type=cnf-app
+  register: cnf_pod
+- name: fail if the cnf app pod is not found
+  fail:
+    msg: "Unable to find cnf app pod"
+  when:
+    - "cnf_pod.resources|length == 0"
+
+- name: set cnf app pod's node name
+  set_fact:
+    cnf_existing_node: "{{ cnf_pod.resources[0].spec.nodeName }}"
+    cnf_existing_pod_name: "{{ cnf_pod.resources[0].metadata.name }}"
+    cnf_app_count: "{{ cnf_pod.resources|length }}"
+- name: show current node of testpmd
+  debug:
+    msg: "CNF App is running on node {{ cnf_existing_node }}"
+- name: cordon the node
+  shell: |
+    export KUBECONFIG={{ kubeconfig_path }}
+    {{ oc_tool_path }} adm cordon {{ cnf_existing_node }}
+
+- name: delete the cnf app pod
+  k8s:
+    kind: Pod
+    namespace: "{{ cnf_namespace }}"
+    name: "{{ cnf_existing_pod_name }}"
+    state: absent
+    wait: yes
+    wait_timeout: 300
+- name: check cnf app pod count to match and running
+  k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: Pod
+    label_selectors:
+      - example-cnf-type=cnf-app
+    field_selectors:
+      - status.phase=Running
+  register: cnf_new_pods
+  retries: 60
+  delay: 5
+  until:
+    - "cnf_new_pods.resources|length == cnf_app_count|int"
+
+- name: set new testpmd node name
+  set_fact:
+    testpmd_new_node: "{{ cnf_new_pods.resources[0].spec.nodeName }}"
+
+- name: uncordon the node
+  shell: |
+    export KUBECONFIG={{ kubeconfig_path }}
+    {{ oc_tool_path }} adm uncordon {{ cnf_existing_node }}
+
+- fail:
+    msg: "TestPMD pod is not migrated"
+  when: testpmd_new_node == cnf_existing_node
+
+- debug:
+    msg: "TestPMD pod is migrated from {{ cnf_existing_node }} to {{ testpmd_new_node }}"

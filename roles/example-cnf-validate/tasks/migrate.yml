@@ -1,4 +1,8 @@
 ---
+- name: validate can be executed only in the continous burst mode
+  fail:
+    msg: "Validate can run only with continous_burst_mode"
+  when: "not continous_burst_mode|bool"
 - name: get TestPMD CR info
   k8s_info:
     namespace: "{{ cnf_namespace }}"
@@ -11,18 +15,9 @@
 - name: set testpmd CR name
   set_fact:
     testpmd_cr_name: "{{ testpmd_list.resources[0].metadata.name }}"
-- name: get TRexConfig CR info
-  k8s_info:
-    namespace: "{{ cnf_namespace }}"
-    kind: TRexConfig
-  register: trex_list
-- name: validate number of TRexConfig CRs
-  fail:
-    msg: "TRexConfig CRs count ({{ trex_list.resources|length }}) is invalid "
-  when: "trex_list.resources|length != 1"
 - name: set trexconfig CR name
   set_fact:
-    trex_cr_name: "{{ trex_list.resources[0].metadata.name }}"
+    trex_cr_name: "{{ continous_burst_cr }}"
 
 # Ensure there is atleast one patcket matched event
 - name: get packet matched event from trex
@@ -38,71 +33,25 @@
     msg: "PacketMatched event is not found in TRexConfig CR"
   when: matched.resources|length == 0
 
-# currently only one testpmd is expected
-- name: get testpmd pod
-  k8s_info:
-    kind: Pod
-    namespace: "{{ cnf_namespace }}"
-    label_selectors:
-      - example-cnf-type=cnf-app
-  register: testpmd_pod
-- name: fail if the testpmd pod is not found
-  fail:
-    msg: "Unable to find testpmd pod"
-  when:
-    - "testpmd_pod.resources|length != 1"
+- name: kubeconfig path if not available
+  when: "kubeconfig_path|default('')|length == 0"
+  block:
+  - name: get kubeconfig path of not provided
+    shell: "echo $KUBECONFIG"
+    register: kc_out
+  - name: fail if KUBECONFIG env is not found and kubeconfig_path is not set
+    fail:
+      msg: "Failed to find kubeconfig"
+    when: kc_out.stdout|length == 0
+  - name: set kubeconfig path
+    set_fact:
+      kubeconfig_path: "{{ kc_out.stdout }}"
 
-- name: set testpmd node name
-  set_fact:
-    testpmd_existing_node: "{{ testpmd_pod.resources[0].spec.nodeName }}"
-    testpmd_existing_pod_name: "{{ testpmd_pod.resources[0].metadata.name }}"
-- name: show current node of testpmd
-  debug:
-    msg: "TestPMD is running on node {{ testpmd_existing_node }}"
-- name: cordon the node
-  shell: |
-    export KUBECONFIG={{ kubeconfig_path }}
-    {{ oc_tool_path }} adm cordon {{ testpmd_existing_node }}
+- name: run pod deletion test
+  include_tasks: pod-delete.yaml
+  when: "validate_pod_delete|default(true)|bool"
 
-- name: delete the testpmd pod
-  k8s:
-    kind: Pod
-    namespace: "{{ cnf_namespace }}"
-    name: "{{ testpmd_existing_pod_name }}"
-    state: absent
-    wait: yes
-    wait_timeout: 300
-- name: check testpmd pod count to be 1 and running
-  k8s_info:
-    namespace: "{{ cnf_namespace }}"
-    kind: Pod
-    label_selectors:
-      - example-cnf-type=cnf-app
-  register: testpmd_pods
-  retries: 60
-  delay: 5
-  until:
-    - "testpmd_pods.resources|length == 1"
-    - "'status'  in testpmd_pods.resources[0]"
-    - "'phase'  in testpmd_pods.resources[0].status"
-    - "testpmd_pods.resources[0].status.phase == 'Running'"
-
-- name: set new testpmd node name
-  set_fact:
-    testpmd_new_node: "{{ testpmd_pods.resources[0].spec.nodeName }}"
-
-- name: uncordon the node
-  shell: |
-    export KUBECONFIG={{ kubeconfig_path }}
-    {{ oc_tool_path }} adm uncordon {{ testpmd_existing_node }}
-
-- fail:
-    msg: "TestPMD pod is not migrated"
-  when: testpmd_new_node == testpmd_existing_node
-
-- debug:
-    msg: "TestPMD pod is migrated from {{ testpmd_existing_node }} to {{ testpmd_new_node }}"
-
-- name: wait for migration to complete and packet recovery
-  pause:
-    seconds: "{{ migration_delay_seconds|default(30) }}"
+# NOTE: Pod will not be migrated when node is rebooted, --pod-eviction-timeout is 5m default
+#- name: run node reboot test
+#  include_tasks: node-reboot.yaml
+#  when: "validate_node_reboot|default(true)|bool"

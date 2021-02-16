@@ -1,4 +1,9 @@
 ---
 # Customizable variables
 cnf_namespace: example-cnf
-...
+
+continous_burst_mode: false
+continous_burst_cr: trex-app-burst
+
+oc_tool_path: oc
+kubeconfig_path: ''

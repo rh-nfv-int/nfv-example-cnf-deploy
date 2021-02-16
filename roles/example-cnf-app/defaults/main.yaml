@@ -47,3 +47,4 @@ trex_core_count: 0
 trex_test_config: []
 
 continous_burst_mode: false
+continous_burst_cr: trex-app-burst

@@ -10,7 +10,7 @@ spec:
   imagePullPolicy: {{ image_pull_policy }}
 {% if enable_lb|bool %}
   ethpeerMaclist: {{ lb_cnf_port_mac_list }}
-  size: 2  
+  size: {{ testpmd_app_size|default(2) }}
 {% else %}
   ethpeerMaclist: {{ trex_mac_list }}
   size: 1  

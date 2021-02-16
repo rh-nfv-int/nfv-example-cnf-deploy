@@ -2,6 +2,10 @@
 - hosts: localhost
   gather_facts: no
   tasks:
+    - name: create app
+      import_role:
+        name: example-cnf-app
+      when: "create|default(true)|bool"
     - include_role:
         name: example-cnf-validate
     - name: execution results

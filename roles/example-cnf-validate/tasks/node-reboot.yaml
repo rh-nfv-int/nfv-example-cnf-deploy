@@ -1,0 +1,55 @@
+---
+- name: get cnf app pod
+  k8s_info:
+    kind: Pod
+    namespace: "{{ cnf_namespace }}"
+    label_selectors:
+      - example-cnf-type=cnf-app
+  register: cnf_pod
+- name: fail if the cnf app pod is not found
+  fail:
+    msg: "Unable to find cnf app pod"
+  when:
+    - "cnf_pod.resources|length == 0"
+- name: get trex server pod
+  k8s_info:
+    kind: Pod
+    namespace: "{{ cnf_namespace }}"
+    label_selectors:
+      - example-cnf-type=pkt-gen
+  register: pktgen_pod
+
+- name: set cnf app pod's node name
+  set_fact:
+    cnf_existing_node: "{{ cnf_pod.resources[0].spec.nodeName }}"
+    cnf_existing_pod: "{{ cnf_pod.resources[0].metadata.name }}"
+    cnf_app_count: "{{ cnf_pod.resources|length }}"
+- name: block for trex server and cnf app are in different node
+  when: "cnf_existing_node != pktgen_pod.resources[0].spec.nodeName"
+  block:
+  - name: show current node of testpmd
+    debug:
+      msg: "CNF App is running on node {{ cnf_existing_node }}"
+  
+  - name: add worker node as host
+    add_host:
+      name: "{{ cnf_existing_node }}"
+      groups:
+        - worker
+      ansible_ssh_user: core
+  
+  - name: reboot the node
+    reboot:
+      reboot_timeout: 300
+    become: yes
+    delegate_to: "{{ cnf_existing_node }}"
+  
+  - name: restart sriov config and device plugin on the restarted node, for the issue of VF resources not added to restarted node
+    shell: |
+      export KUBECONFIG={{ kubeconfig_path }} 
+      oc -n openshift-sriov-network-operator get pods -o wide | grep worker-71 | awk '{print $1}' | xargs oc -n openshift-sriov-network-operator delete --wait=false pod
+  
+  - name: wait for node
+    wait_for_connection:
+      timeout: 30
+    delegate_to: "{{ cnf_existing_node }}"

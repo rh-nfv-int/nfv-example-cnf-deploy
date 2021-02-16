@@ -38,8 +38,10 @@
   set_fact:
     trex_app_cr_name: trex-app1
     duration: 120
+  when: "not continous_burst_mode|bool"
 - name: set continous burst mode vars
   set_fact:
+    trex_app_cr_name: "{{ continous_burst_cr }}"
     duration: -1
   when: "continous_burst_mode|bool"
 - name: create cr for trex app
@@ -56,8 +58,8 @@
       - "reason==TestStarted"
       - "involvedObject.name={{ trex_app_cr_name }}"
   register: trex_event
-  retries: 10
-  delay: 2
+  retries: 60
+  delay: 5
 
 - name: wait trex app run complete event
   k8s_info:
@@ -88,7 +90,7 @@
       - "reason==PacketMatched"
       - "involvedObject.name={{ trex_app_cr_name }}"
   register: trex_result
-  retries: 10
+  retries: 60
   delay: 5
   until: "trex_result.resources|length > 0"
   when: "continous_burst_mode|bool"

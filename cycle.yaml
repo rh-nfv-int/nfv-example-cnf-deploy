@@ -1,12 +1,6 @@
 ---
 - hosts: localhost
   gather_facts: no
-  vars:
-    operator_version: v0.1.2
-    app_version: v0.1.3
-    networks:
-      - name: sriov-network-intel-numa0
-        count: 2
   tasks:
     - name: delete all resources
       import_role:
@@ -23,10 +17,6 @@
     - name: run migration test
       import_role:
         name: example-cnf-validate
-    - name: delete all resource on completion
-      import_role:
-        name: example-cnf-destroy
-      when: not skip_post_delete|bool
     - name: execution results
       debug:
         var: packet_details
