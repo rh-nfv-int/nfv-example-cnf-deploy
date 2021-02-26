@@ -1,0 +1,64 @@
+#!/bin/bash
+
+mkdir -p /var/log/trex
+mkdir -p /var/log/testpmd
+
+podman inspect trex_app > /dev/null 2>&1
+if [[ $? != 0 ]]; then
+    rm -rf /var/log/trex/*
+    podman run --name trex_server -d --net host --privileged \
+	-p 4500:4500 -p 4501:4501 \
+	-e LB_MACS="{{ lb_gen_port_mac_list|join(',') }}" -e MODE=lb -e trex_core_count=2 -e TREX_CPU=6 \
+	-v /dev/hugepages:/dev/hugepages -v /var/log/trex:/var/log \
+	quay.io/krsacme/trex-container-server:v0.2.1 trex-wrapper
+
+    podman run --name trex_app -d --net host \
+	-e STATS_PERIOD=1 -e DURATION=-1 -e PACKET_RATE=10kpps -e PACKET_SIZE=64 \
+	-e LB_MACS="{{ lb_gen_port_mac_list|join(',') }}" \
+	-v /var/log/trex:/var/log:Z \
+	quay.io/krsacme/trex-container-app:v0.2.1 trex-wrapper
+fi
+
+{% if lb_standalone|default(true)|bool %}
+podman inspect lb_app > /dev/null 2>&1
+if [[ $? != 0 ]]; then
+    podman run --name lb_app -d --net host --privileged -u root \
+	-e LB_MACS="{{ lb_gen_port_mac_list|join(',') }}" -e MODE=lb -e TESTPMD_CPU_COUNT=6 \
+	-v /dev/hugepages:/dev/hugepages -v /var/log/testpmd/:/var/log/testpmd:Z -v /var/lib/testpmd:/var/lib/testpmd:Z \
+	quay.io/krsacme/testpmd-container-app-testpmd:v0.2.1 testpmd-wrapper \
+        --socket-mem 1024 -n 4 --proc-type auto --file-prefix pg \
+        -- --disable-rss --nb-cores=4 --auto-start --forward-mode=lb \
+        --eth-peer=0,20:04:0f:f1:89:01 --eth-peer=1,20:04:0f:f1:89:02
+
+    LOG_FILE="/var/log/testpmd/app.log"
+    n=5
+    until [ "$n" -le 0 ]; do
+        echo "Waiting for log file creation ($n)..."
+        [ -e $LOG_FILE ] && break || sleep 2
+        n=$((n - 1))
+    done
+    if [ $n -le 0 ]; then
+        echo "ERROR: File $LOG_FILE not found, exit application"
+        exit 1
+    fi
+    
+    TESTPMD_LOG_CHECK_STRING=${log_check_string:="lb packet forwarding"}
+    echo "Log file $LOG_FILE exists, wait for ${TESTPMD_LOG_CHECK_STRING} message"
+    n=120
+    until [ "$n" -le 0 ]; do
+        echo "Waiting for TestPMD start log ($n)..."
+        grep -q "$TESTPMD_LOG_CHECK_STRING" $LOG_FILE && break || sleep 5
+        n=$((n - 1))
+    done
+    if [ $n -le 0 ]; then
+        echo "ERROR: TestPMD is not started, waiting to configure timedout..."
+        exit 1
+    fi
+    sleep 5
+
+    podman run --name lb_listener -d --net host --privileged -u root \
+	-e STATS_PERIOD=1 -e DURATION=-1 -e PACKET_RATE=10kpps -e PACKET_SIZE=64 \
+	-v /var/log/testpmd:/var/log/testpmd -v /var/lib/testpmd:/var/lib/testpmd \
+	quay.io/krsacme/testpmd-container-app-listener:v0.2.1 testpmd-wrapper
+fi
+{% endif %}

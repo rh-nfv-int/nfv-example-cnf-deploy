@@ -1,6 +1,6 @@
 ---
 - name: run additional tests
-  include_tasks: trex-profile.yaml
+  include_tasks: trex/profile.yaml
   loop: "{{ trex_test_config }}"
   loop_control:
     loop_var: trex_test_config_item

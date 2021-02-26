@@ -1,8 +1,4 @@
 ---
-- name: validate can be executed only in the continous burst mode
-  fail:
-    msg: "Validate can run only with continous_burst_mode"
-  when: "not continous_burst_mode|bool"
 - name: get TestPMD CR info
   k8s_info:
     namespace: "{{ cnf_namespace }}"
@@ -12,12 +8,6 @@
   fail:
     msg: "TestPMD CRs count ({{ testpmd_list.resources|length }}) is invalid "
   when: "testpmd_list.resources|length != 1"
-- name: set testpmd CR name
-  set_fact:
-    testpmd_cr_name: "{{ testpmd_list.resources[0].metadata.name }}"
-- name: set trexconfig CR name
-  set_fact:
-    trex_cr_name: "{{ continous_burst_cr }}"
 
 # Ensure there is atleast one patcket matched event
 - name: get packet matched event from trex

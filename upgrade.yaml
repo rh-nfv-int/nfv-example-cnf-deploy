@@ -1,0 +1,29 @@
+---
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: delete all resources
+      import_role:
+        name: example-cnf-destroy
+    - name: create catalog
+      import_role:
+        name: example-cnf-catalog
+    - name: create app
+      import_role:
+        name: example-cnf-app
+    - name: upgrade prepare
+      import_role:
+        name: example-cnf-upgrade
+        tasks_from: prepare.yaml
+    - name: do upgrade
+      import_role:
+        name: example-cnf-upgrade
+        tasks_from: upgrade.yaml
+    - name: upgrade prepare
+      import_role:
+        name: example-cnf-upgrade
+        tasks_from: drop-check.yaml
+    - name: execution results
+      debug:
+        var: packet_details
+

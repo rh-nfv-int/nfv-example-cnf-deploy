@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -ex
+
+sudo usermod -p $(openssl passwd -1  -salt 5RPVAd test) root
+sudo sed -i 's/^[#]*PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config
+sudo sed -i 's/^[#]*PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+sudo systemctl restart sshd
+
+EXT_IF="{{ external_access_interface }}"
+if [ ! -z ${EXT_IF} ]; then
+    sudo nmcli conn add type ethernet con-name ${EXT_IF} ifname ${EXT_IF}
+    ip a show ${EXT_IF} | grep 'inet ' | xargs | cut -d/ -f1 | cut -d' ' -f2
+fi
+
+if [ -f /home/core/kubeconfig ]; then
+    sudo mkdir -p /var/lib/testpmd
+    sudo mv /home/core/kubeconfig /var/lib/testpmd/
+fi

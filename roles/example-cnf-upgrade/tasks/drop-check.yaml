@@ -1,0 +1,12 @@
+---
+- name: copy the log file locally
+  command: scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null core@{{ trex_pod_node }}:/var/log/trex/run-trex.log run-trex.log
+- name: parse events
+  parse_trex_logs:
+    path: run-trex.log
+  register: packet_details
+- debug: var=packet_details
+- name: remove local file
+  file:
+    path: run-trex.log
+    state: absent

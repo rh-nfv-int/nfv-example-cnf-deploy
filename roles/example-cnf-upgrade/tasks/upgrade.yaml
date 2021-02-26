@@ -1,0 +1,60 @@
+---
+- name: wait for upgrade complete
+  k8s_info:
+    kind: ClusterVersion
+  register: cv
+- name: trigger upgrade
+  when: "cv.resources[0].status.history|selectattr('state', 'contains', 'Partial')|list|length == 0" 
+  block:
+  - name: get upgrade details
+    shell: oc adm upgrade | grep ocp-release | awk '{ print $1 }'
+    register: upgrade_list
+  - name: sort upgrade list
+    set_fact:
+      upgrade_list_sorted: "{{ upgrade_list.stdout_lines|sort }}"
+  - name: get next version to upgrade
+    set_fact:
+      upgrade_to: "{{ upgrade_list_sorted[0] }}"
+  - debug:
+      msg: "Cluster upgrade to {{ upgrade_to }} is initiated..."
+  - name: initiate upgrade
+    command: oc adm upgrade --to={{ upgrade_to }}
+  - pause:
+      seconds: 30
+- name: wait for upgrade complete
+  k8s_info:
+    kind: ClusterVersion
+  register: cv
+  until:
+  - "'resources' in cv"
+  - "cv.resources|length > 0"
+  - "cv.resources[0].status.history|selectattr('state', 'contains', 'Partial')|list|length == 0"
+  retries: 120
+  delay: 30
+- name: Check the master nodes managed by MCP are updated and ready
+  k8s_info:
+    kind: MachineConfigPool
+    name: master
+  register: mcp_master
+  retries: 120
+  delay: 30
+  until:
+    - "'resources' in mcp_master"
+    - "mcp_master.resources|length == 1"
+    - "'status' in mcp_master.resources[0]"
+    - "mcp_master.resources[0].status.readyMachineCount == mcp_master.resources[0].status.machineCount"
+    - "mcp_master.resources[0].status.updatedMachineCount == mcp_master.resources[0].status.machineCount"
+
+- name: Check the worker nodes managed by MCP are updated and ready
+  k8s_info:
+    kind: MachineConfigPool
+    name: worker
+  register: mcp_worker
+  retries: 120
+  delay: 30
+  until:
+    - "'resources' in mcp_worker"
+    - "mcp_worker.resources|length == 1"
+    - "'status' in mcp_worker.resources[0]"
+    - "mcp_worker.resources[0].status.readyMachineCount == mcp_worker.resources[0].status.machineCount"
+    - "mcp_worker.resources[0].status.updatedMachineCount == mcp_worker.resources[0].status.machineCount"

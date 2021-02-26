@@ -20,3 +20,6 @@ spec:
   lbMacs: {{ lb_gen_port_mac_list }}
 {% endif %}  
   cpu: 6
+{% if trex_config_skip|default(false)|bool %}
+  trex_config_skip: true
+{% endif %}

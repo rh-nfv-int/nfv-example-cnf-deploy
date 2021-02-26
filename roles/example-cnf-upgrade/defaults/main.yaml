@@ -1,0 +1,4 @@
+---
+cnf_namespace: example-cnf
+external_access_interface: 'eno1'
+lb_gen_port_mac_list: ["40:04:0f:f1:89:01","40:04:0f:f1:89:02"]

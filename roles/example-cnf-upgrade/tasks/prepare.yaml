@@ -1,0 +1,136 @@
+---
+# Get the TRex Server node
+- name: trex pod's node name
+  when: trex_pod_node is not defined
+  block:
+  - name: get trex pod
+    k8s_info:
+      kind: Pod
+      namespace: "{{ cnf_namespace }}"
+      label_selectors:
+      - example-cnf-type=pkt-gen
+    register: trex_pod
+  - name: fail if the trex pod count is 0
+    fail:
+      msg: "Unable to find trex pod"
+    when:
+      - "trex_pod.resources|length == 0"
+  - name: set trex pod facts
+    set_fact:
+      trex_pod_node: "{{ trex_pod.resources[0].spec.nodeName }}"
+
+# Delete the TRex Server
+- name: get all trexconfig
+  k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: TRexConfig
+    api_version: examplecnf.openshift.io/v1
+  register: configs
+- name: delete trexconfigs
+  k8s:
+    namespace: "{{ cnf_namespace }}"
+    kind: TRexConfig
+    api_version: examplecnf.openshift.io/v1
+    name: "{{ item.metadata.name }}"
+    state: absent
+  loop: "{{ configs.resources }}"
+
+- name: wait for trex pod deletion
+  k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: Pod
+    label_selectors:
+    - example-cnf-type=pkt-gen
+  register: pods
+  retries: 60
+  delay: 5
+  until:
+  - "pods.resources|length == 0"
+
+# Delete the LB
+- name: get all loadbalancer
+  k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: LoadBalancer
+    api_version: examplecnf.openshift.io/v1
+  register: configs
+- name: delete loadbalancers
+  k8s:
+    namespace: "{{ cnf_namespace }}"
+    kind: LoadBalancer
+    api_version: examplecnf.openshift.io/v1
+    name: "{{ item.metadata.name }}"
+    state: absent
+  loop: "{{ configs.resources }}"
+
+- name: wait for lb pod deletion
+  k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: Pod
+    label_selectors:
+    - example-cnf-type=lb-app
+  register: pods
+  retries: 60
+  delay: 5
+  until:
+  - "pods.resources|length == 0"
+
+# Copy node (ssh, passwd, ip) configure scripts to target node - trex_pod_node
+- name: render prepare script
+  template:
+    src: prepare.sh.j2
+    dest: prepare.sh
+- name: copy prepare script to worker
+  command: scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null prepare.sh core@{{ trex_pod_node }}:~
+- name: delete local prepare copy
+  file:
+    path: prepare.sh
+    state: absent
+- name: kubeconfig path if not available
+  when: "kubeconfig_path|default('')|length == 0"
+  block:
+  - name: get kubeconfig path of not provided
+    shell: "echo $KUBECONFIG"
+    register: kc_out
+  - name: fail if KUBECONFIG env is not found and kubeconfig_path is not set
+    fail:
+      msg: "Failed to find kubeconfig"
+    when: kc_out.stdout|length == 0
+  - name: set kubeconfig path
+    set_fact:
+      kubeconfig_path: "{{ kc_out.stdout }}"
+- name: copy kubeconfig, required for testpmd as lb listener
+  command: scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {{ kubeconfig_path }} core@{{ trex_pod_node }}:~/kubeconfig
+
+# Run scripts
+- name: run prepare script
+  command: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null core@{{ trex_pod_node }} bash prepare.sh
+
+# Delete trex_pod_node 
+- name: delete trex node
+  k8s:
+    kind: Node
+    name: "{{ trex_pod_node }}"
+    state: absent
+  register: node_delete
+
+# Copy podman scripts and run
+- name: render run script
+  template:
+    src: run.sh.j2
+    dest: run.sh
+- name: copy podman run script to worker
+  command: scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null run.sh core@{{ trex_pod_node }}:~
+- name: delete run script
+  file:
+    path: run.sh
+    state: absent
+- name: run podman script
+  command: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null core@{{ trex_pod_node }} sudo bash run.sh
+# Wait for start by checking logs in /var/log/trex/run-trex.log of trex_pod_node
+- name: check for PacketMatched
+  command: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null core@{{ trex_pod_node }} grep PacketMatched /var/log/trex/run-trex.log
+  register: evt
+  retries: 10
+  delay: 10
+  until: evt.stdout_lines|length > 0

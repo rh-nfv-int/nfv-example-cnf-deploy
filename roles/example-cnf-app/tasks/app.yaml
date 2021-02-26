@@ -114,7 +114,7 @@
   when: enable_trex|bool
   block:
     - name: include trex tasks to create app
-      include_tasks: trex-app.yaml
+      include_tasks: trex/app.yaml
     - name: restart trex once if the packet generation has not started
       block:
         - name: delete trexconfig cr
@@ -126,7 +126,7 @@
         - pause:
             seconds: 45
         - name: re-run trex tasks to create app again
-          include_tasks: trex-app.yaml
+          include_tasks: trex/app.yaml
       when:
         - "trex_retry|default(true)|bool"
         - "not trex_app_run_passed|default(false)|bool"
@@ -135,5 +135,5 @@
         msg: "TRex App Run has failed!!"
       when: not trex_app_run_passed|default(false)|bool
     - name: trex additional tests
-      include_tasks: trex-tests.yaml
-      when: "trex_test_config|length > 0 and not continous_burst_mode|bool"
+      include_tasks: trex/tests.yaml
+      when: "trex_test_config|length > 0"
