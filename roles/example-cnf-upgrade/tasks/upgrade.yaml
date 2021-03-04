@@ -29,7 +29,7 @@
   - "'resources' in cv"
   - "cv.resources|length > 0"
   - "cv.resources[0].status.history|selectattr('state', 'contains', 'Partial')|list|length == 0"
-  retries: 120
+  retries: 300
   delay: 30
 - name: Check the master nodes managed by MCP are updated and ready
   k8s_info:
