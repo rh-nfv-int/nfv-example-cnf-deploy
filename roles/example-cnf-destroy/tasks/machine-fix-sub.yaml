@@ -1,0 +1,27 @@
+---
+- name: set the machine name to check
+  set_fact:
+    machine_name: "{{ machine.metadata.name }}"
+- name: print the machine name
+  debug:
+    msg: "Machine: {{ machine_name }}"
+- name: get all nodes
+  k8s_info:
+    kind: Node
+  register: nodes
+- name: reset found fact
+  set_fact:
+    found: false
+- name: set found fact by checking all nodes
+  set_fact:
+    found: true
+  when: "machine_name in item['metadata']['annotations']['machine.openshift.io/machine']"
+  loop: "{{ nodes.resources }}"
+- name: delete machine if associated node is not found
+  k8s:
+    api_version: machine.openshift.io/v1beta1
+    name: "{{ machine_name }}"
+    kind: Machine
+    namespace: openshift-machine-api
+    state: absent
+  when: not found|bool

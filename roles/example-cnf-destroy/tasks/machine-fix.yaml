@@ -1,0 +1,58 @@
+---
+- name: get all nodes
+  k8s_info:
+    kind: Node
+  register: nodes
+- name: print nodes length
+  debug:
+    msg: "Nodes = {{ nodes.resources|length }}"
+- name: get all machines
+  k8s_info:
+    api_version: machine.openshift.io/v1beta1
+    kind: Machine
+    namespace: openshift-machine-api
+  register: machines
+- name: print machines length
+  debug:
+    msg: "Machines = {{ machines.resources|length }}"
+- name: delete machine for which node is not found
+  include_tasks: machine-fix-sub.yaml
+  when: "machine['metadata']['labels']['machine.openshift.io/cluster-api-machine-role'] == 'worker'"
+  loop: "{{ machines.resources }}"
+  loop_control:
+    loop_var: machine
+- name: wait for node creation
+  k8s_info:
+    kind: Node
+  register: nodes
+  retries: 300
+  delay: 30
+  until: "nodes.resources|length == machines.resources|length"
+
+- name: check the master nodes managed by MCP are updated and ready
+  k8s_info:
+    kind: MachineConfigPool
+    name: master
+  register: mcp_master
+  retries: 120
+  delay: 30
+  until:
+    - "'resources' in mcp_master"
+    - "mcp_master.resources|length == 1"
+    - "'status' in mcp_master.resources[0]"
+    - "mcp_master.resources[0].status.readyMachineCount == mcp_master.resources[0].status.machineCount"
+    - "mcp_master.resources[0].status.updatedMachineCount == mcp_master.resources[0].status.machineCount"
+
+- name: check the worker nodes managed by MCP are updated and ready
+  k8s_info:
+    kind: MachineConfigPool
+    name: worker
+  register: mcp_worker
+  retries: 120
+  delay: 30
+  until:
+    - "'resources' in mcp_worker"
+    - "mcp_worker.resources|length == 1"
+    - "'status' in mcp_worker.resources[0]"
+    - "mcp_worker.resources[0].status.readyMachineCount == mcp_worker.resources[0].status.machineCount"
+    - "mcp_worker.resources[0].status.updatedMachineCount == mcp_worker.resources[0].status.machineCount"
