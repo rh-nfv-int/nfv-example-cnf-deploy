@@ -17,7 +17,7 @@ spec:
 {% endif %}
   networks: {{ cnf_app_networks }}
   terminationGracePeriodSeconds: {{ termination_grace_period_seconds }}
-{% if mac_workaround_enable|default(true)|bool %}
+{% if mac_workaround_enable|default(false)|bool %}
   macWorkaroundEnable: true
   macWorkaroundVersion: "{% if 'v0.0.' in operator_version %}4.4{% else %}{{ ocp_version }}{% endif %}"
 {% endif %}
