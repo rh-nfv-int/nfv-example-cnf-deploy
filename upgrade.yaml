@@ -2,15 +2,6 @@
 - hosts: localhost
   gather_facts: no
   tasks:
-    - name: delete all resources
-      import_role:
-        name: example-cnf-destroy
-    - name: create catalog
-      import_role:
-        name: example-cnf-catalog
-    - name: create app
-      import_role:
-        name: example-cnf-app
     - name: upgrade prepare
       import_role:
         name: example-cnf-upgrade
