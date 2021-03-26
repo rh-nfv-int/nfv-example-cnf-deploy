@@ -2,5 +2,8 @@
 - hosts: localhost
   gather_facts: no
   tasks:
-    - import_role:
-        name: example-cnf-destroy
+  - import_role:
+      name: example-cnf-destroy
+  - pause:
+      seconds: 15
+  - command: /home/kni/cluster-deploy-configs/configs/ocp/prune.sh

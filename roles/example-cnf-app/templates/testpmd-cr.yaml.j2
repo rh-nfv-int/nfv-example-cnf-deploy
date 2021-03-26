@@ -4,9 +4,8 @@ metadata:
   name: testpmd
   namespace: {{ cnf_namespace }}
 spec:
-  registry: "{{ registry_url }}"
-  org: "{{ repo_name }}"
-  version: "{{ app_version }}"
+  image_testpmd: registry.redhat.io/openshift4/dpdk-base-rhel8:v4.6
+  privileged: true
   imagePullPolicy: {{ image_pull_policy }}
 {% if enable_lb|bool %}
   ethpeerMaclist: {{ lb_cnf_port_mac_list }}

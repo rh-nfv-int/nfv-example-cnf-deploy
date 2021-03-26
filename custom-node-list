@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+
+import os
+
+from kubernetes import client, config
+from kubernetes.client.rest import ApiException
+from prettytable import PrettyTable
+
+kubeconfig = os.getenv("K8S_AUTH_KUBECONFIG") or os.getenv("KUBECONFIG")
+config.load_kube_config(kubeconfig)
+
+def get_items():
+    t = PrettyTable(['Name', 'Status', 'Roles'])
+    t.align['Name'] = 'l'                                                                                                       
+    t.align['Status'] = 'l'
+    t.align['Roles'] = 'l'
+    t.border = False
+    t.right_padding_width = 3
+    t.left_padding_width = 0
+
+    v1 = client.CoreV1Api()
+    out = v1.list_node()
+    for item in out.items:
+        cMap = {}
+        for cond in item.status.conditions:
+            cMap[cond.type] = cond
+        status = ""
+        if cMap.get('Ready'):
+            if cMap['Ready'].status:
+                status = "Ready"
+            else:
+                status = "NotReady"
+        else:
+            status = "Unknown"
+        if item.spec.unschedulable:
+            status += ",SchedulingDisabled"
+        role = ''
+        for k,v in item.metadata.labels.items():
+            if "node-role.kubernetes.io" in k:
+                if role:
+                    role += ","
+                role += k.split("/")[1]
+        t.add_row([item.metadata.name, status, role])
+    print(t)
+
+if __name__ == "__main__":
+    get_items()
+

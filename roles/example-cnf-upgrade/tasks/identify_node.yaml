@@ -1,0 +1,20 @@
+---
+# Get the TRex Server node
+- name: trex pod's node name
+  when: trex_pod_node is not defined
+  block:
+  - name: get trex pod
+    k8s_info:
+      kind: Pod
+      namespace: "{{ cnf_namespace }}"
+      label_selectors:
+      - example-cnf-type=pkt-gen
+    register: trex_pod
+  - name: fail if the trex pod count is 0
+    fail:
+      msg: "Unable to find trex pod"
+    when:
+      - "trex_pod.resources|length == 0"
+  - name: set trex pod facts
+    set_fact:
+      trex_pod_node: "{{ trex_pod.resources[0].spec.nodeName }}"

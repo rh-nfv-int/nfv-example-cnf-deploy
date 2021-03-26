@@ -1,0 +1,15 @@
+---
+- name: remove machine-and-sriov-sync subscription
+  k8s:
+    api_version: operators.coreos.com/v1alpha1
+    kind: Subscription
+    name: machine-and-sriov-sync-operator-subscription
+    namespace: "{{ cnf_namespace }}"
+    state: absent
+- name: remove machinesriovsync cr
+  k8s:
+    api: examplecnf.openshift.io/v1
+    namespace: "{{ cnf_namespace }}"
+    kind: MachineSriovSync
+    name: machinesriovsync-sample
+    state: absent

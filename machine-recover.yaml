@@ -5,9 +5,9 @@
   - include_role:
       name: example-cnf-destroy
       tasks_from: machine-fix.yaml
-  - command: ~/cluster-deploy-configs/configs/ocp/node-helper.sh
+  - command: /home/kni/cluster-deploy-configs/configs/ocp/node-helper.sh
   - include_role:
       name: example-cnf-destroy
   - pause: 
       seconds: 15
-  - command: ~/cluster-deploy-configs/configs/ocp/prune.sh
+  - command: /home/kni/cluster-deploy-configs/configs/ocp/prune.sh

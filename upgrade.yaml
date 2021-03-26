@@ -2,6 +2,29 @@
 - hosts: localhost
   gather_facts: no
   tasks:
+    - name: update ssh config with node ips
+      command: /home/kni/cluster-deploy-configs/configs/ocp/node-helper.sh
+    - command: ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null core@192.105.212.4 hostname
+      register: router_ip_node_out
+    - set_fact:
+        router_ip_node: "{{ router_ip_node_out.stdout }}"
+    - debug:
+        msg: "Router running on {{ router_ip_node }}, it should not be deleted"
+    - name: identify node
+      import_role:
+        name: example-cnf-upgrade
+        tasks_from: identify_node.yaml
+      when: trex_pod_node is undefined
+    - fail:
+        msg: "{{ router_ip_node}} cannot be used for upgrade"
+      when: router_ip_node == trex_pod_node
+    - debug:
+        msg: "Standalone node is {{ trex_pod_node }}"
+
+    - name: deploy machine and sriov sync
+      import_role:
+        name: example-cnf-upgrade
+        tasks_from: sync_create.yaml
     - name: upgrade prepare
       import_role:
         name: example-cnf-upgrade
@@ -10,7 +33,7 @@
       import_role:
         name: example-cnf-upgrade
         tasks_from: upgrade.yaml
-    - name: upgrade prepare
+    - name: packet drop check
       import_role:
         name: example-cnf-upgrade
         tasks_from: drop-check.yaml

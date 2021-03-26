@@ -1,0 +1,42 @@
+---
+- name: machine-and-sriov-sync block
+  when: enable_machine_and_sriov_sync|default(true)|bool
+  block:
+  - name: create machine-and-sriov-sync subscription
+    k8s:
+      api_version: operators.coreos.com/v1alpha1
+      kind: Subscription
+      name: machine-and-sriov-sync-operator-subscription
+      namespace: "{{ cnf_namespace }}"
+      definition:
+        spec:
+          channel: "alpha"
+          name: machine-and-sriov-sync
+          source: "{{ catalog_name }}"
+          sourceNamespace: openshift-marketplace
+  - name: set machine-and-sriov-sync csv name
+    set_fact:
+      csv_name: "machine-and-sriov-sync.{{ operator_version }}"
+  - name: get machine-and-sriov-sync csv
+    k8s_info:
+      api: operators.coreos.com/v1alpha1
+      namespace: "{{ cnf_namespace }}"
+      kind: ClusterServiceVersion
+      name: "{{ csv_name }}"
+    register: csv
+    retries: 30
+    delay: 5
+    until:
+      - "csv.resources|length == 1"
+      - "'status' in csv.resources[0]"
+      - "'phase' in csv.resources[0].status"
+      - "csv.resources[0].status.phase == 'Succeeded'"
+  - name: create machinesriovsync cr
+    k8s:
+      api: examplecnf.openshift.io/v1
+      namespace: "{{ cnf_namespace }}"
+      kind: MachineSriovSync
+      name: machinesriovsync-sample
+      definition:
+        spec:
+          test: 1
