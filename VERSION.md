@@ -8,11 +8,15 @@ Operator vs Application Version Mapping
 | v0.2.1	| v0.2.0	| v0.2-1	  |
 | v0.2.2	| v0.2.1	| v0.2-2  	|
 | v0.2.2	| v0.2.1	| v0.2-3  	|
+| v0.2.3	| v0.2.1	| v0.2-4  	|
 
 
 Deploy Scripts Highlighs
 ------------------------
 This repository which hosts the ansible roles and playbooks required to deploy Example CNF test methodology. This sections highlights major changes with versions:
+
+* v0.2-4
+  * TestPMDMac object is removed as it is not used, use only CNFAppMac
 
 * v0.2-3
   * CNF app is now based on the OpenShift's default dpdk-base image, instead of a custom image. testpmd-operator has been updated in v0.2.2 version to support this deployment
