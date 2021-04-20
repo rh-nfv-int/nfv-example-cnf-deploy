@@ -39,6 +39,7 @@
   when: trex_result.resources|length > 0
 
 - name: trexapp block
+  when: enable_trex_app|bool
   block:
   - name: set trex app cr name
     set_fact:

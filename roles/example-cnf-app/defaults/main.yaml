@@ -6,6 +6,7 @@ app_version: ""
 registry_url: "jumphost.{{ cluster_name }}.dfwt5g.lab:5000"
 repo_name: nfv-example-cnf
 enable_trex: true
+enable_trex_app: true
 enable_lb: true
 
 # Internal variables

@@ -128,12 +128,17 @@
         - name: re-run trex tasks to create app again
           include_tasks: trex/app.yaml
       when:
-        - "trex_retry|default(true)|bool"
-        - "not trex_app_run_passed|default(false)|bool"
+        - enable_trex_app|bool
+        - trex_retry|default(true)|bool
+        - not trex_app_run_passed|default(false)|bool
     - name: fail if trex is not passed
       fail:
         msg: "TRex App Run has failed!!"
-      when: not trex_app_run_passed|default(false)|bool
+      when:
+      - enable_trex_app|bool
+      - not trex_app_run_passed|default(false)|bool
     - name: trex additional tests
       include_tasks: trex/tests.yaml
-      when: "trex_test_config|length > 0"
+      when:
+      - enable_trex_app|bool
+      - trex_test_config|length > 0
