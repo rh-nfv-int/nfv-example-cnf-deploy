@@ -9,11 +9,15 @@ Operator vs Application Version Mapping
 | v0.2.2	| v0.2.1	| v0.2-2  	|
 | v0.2.2	| v0.2.1	| v0.2-3  	|
 | v0.2.3	| v0.2.1	| v0.2-4  	|
+| v0.2.3	| v0.2.1	| v0.2-5  	|
 
 
 Deploy Scripts Highlighs
 ------------------------
 This repository which hosts the ansible roles and playbooks required to deploy Example CNF test methodology. This sections highlights major changes with versions:
+
+* v0.2-5
+  * Added a flag `enable_trex_app` to control trexapp creation
 
 * v0.2-4
   * TestPMDMac object is removed as it is not used, use only CNFAppMac
