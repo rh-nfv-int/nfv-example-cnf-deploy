@@ -4,6 +4,8 @@
   tasks:
   - import_role:
       name: example-cnf-destroy
+  - command: oc delete namespace example-cnf
+  - command: oc create namespace example-cnf
   - pause:
       seconds: 15
   - command: /home/kni/cluster-deploy-configs/configs/ocp/prune.sh

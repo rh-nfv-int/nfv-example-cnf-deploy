@@ -1,0 +1,1 @@
+oc adm upgrade | grep -i 'cluster\|upgrade'; echo; ./custom-node-list; echo; oc get nodes -l node-role.kubernetes.io/worker -o yaml  | grep '^ *machineconfig.*state\|^ *name\|^ *sriov'; echo; ./custom-pod-list

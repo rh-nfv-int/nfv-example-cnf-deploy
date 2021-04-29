@@ -5,7 +5,7 @@ metadata:
   namespace: {{ cnf_namespace }}
 spec:
   image_testpmd: registry.redhat.io/openshift4/dpdk-base-rhel8:v4.6
-  privileged: true
+  privileged: false
   imagePullPolicy: {{ image_pull_policy }}
 {% if enable_lb|bool %}
   ethpeerMaclist: {{ lb_cnf_port_mac_list }}

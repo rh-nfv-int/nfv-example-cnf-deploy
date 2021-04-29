@@ -10,11 +10,16 @@ Operator vs Application Version Mapping
 | v0.2.2	| v0.2.1	| v0.2-3  	|
 | v0.2.3	| v0.2.1	| v0.2-4  	|
 | v0.2.3	| v0.2.1	| v0.2-5  	|
+| v0.2.4	| v0.2.2	| v0.2-6  	|
 
 
 Deploy Scripts Highlighs
 ------------------------
 This repository which hosts the ansible roles and playbooks required to deploy Example CNF test methodology. This sections highlights major changes with versions:
+
+* v0.2-6
+  * App version v0.2.2 is created with latest centos base, v0.2-6 supports deplyoying with it
+  * Opertaor version v0.2.4 created with separate serviceaccount for each operator, also adapted to operator-sdk v1.0.5 changes
 
 * v0.2-5
   * Added a flag `enable_trex_app` to control trexapp creation
