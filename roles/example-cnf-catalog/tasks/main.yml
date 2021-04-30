@@ -3,15 +3,17 @@
   fail:
     msg: "operator_version is required"
   when: "operator_version|length == 0"
+
 - name: check if catalogsource crd is present
   k8s_info:
     kind: CustomResourceDefinition
     name: catalogsources.operators.coreos.com
   register: crd_info
-- name: fail if catalogsource resource is not found
-  fail:
-    msg: "missing catalogsources.operators.coreos.com CRD"
-  when: crd_info.resources|length == 0
+  retries: 1
+  delay: 5
+  until: crd_info.resources|length != 0
+  failed_when: crd_info.resources|length == 0
+
 - name: create catalogsource object for example-cnf
   k8s:
     state: present
@@ -24,10 +26,11 @@
       spec:
         sourceType: grpc
         image: "{{ catalog_image }}"
-        displayName: NFV Example CNF CataloG
+        displayName: NFV Example CNF Catalog
         updateStrategy:
-          registryPoll: 
+          registryPoll:
             interval: 30m
+
 - name: wait for testpmd-operator packagemanifests creation
   k8s_info:
     api_version: packages.operators.coreos.com/v1
@@ -39,6 +42,7 @@
   delay: 5
   until: pkg_manifest_testpmd.resources|length != 0
   failed_when: pkg_manifest_testpmd.resources|length == 0
+
 - name: wait for trex-operator packagemanifests creation
   k8s_info:
     api_version: packages.operators.coreos.com/v1
@@ -50,11 +54,13 @@
   delay: 5
   until: pkg_manifest_trex.resources|length != 0
   failed_when: pkg_manifest_trex.resources|length == 0
+
 - name: create namespace
   k8s:
     api_version: v1
     name: "{{ cnf_namespace }}"
     kind: Namespace
+
 - name: create operatorgroup
   k8s:
     api_version: operators.coreos.com/v1
