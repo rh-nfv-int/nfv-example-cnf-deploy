@@ -5,18 +5,29 @@ metadata:
   namespace: {{ cnf_namespace }}
 spec:
   image_testpmd: {{ image_testpmd }}
-  privileged: false
   imagePullPolicy: {{ image_pull_policy }}
 {% if enable_lb|bool %}
   ethpeerMaclist: {{ lb_cnf_port_mac_list }}
   size: {{ testpmd_app_size|default(2) }}
 {% else %}
   ethpeerMaclist: {{ trex_mac_list }}
-  size: 1  
+  size: 1
 {% endif %}
   networks: {{ cnf_app_networks }}
   terminationGracePeriodSeconds: {{ termination_grace_period_seconds }}
 {% if mac_workaround_enable|default(false)|bool %}
   macWorkaroundEnable: true
   macWorkaroundVersion: "{% if 'v0.0.' in operator_version %}4.4{% else %}{{ ocp_version }}{% endif %}"
+{% endif %}
+{% if testpmd_cpu|default('') %}
+  cpu: {{ testpmd_cpu }}
+{% endif %}
+{% if testpmd_forwarding_cores|default('') %}
+  forwardingCores: {{ testpmd_forwarding_cores }}
+{% endif %}
+{% if testpmd_privileged|default(false)|bool %}
+  privileged: {{ testpmd_privileged }}
+{% endif %}
+{% if testpmd_skip_annot|default(false)|bool %}
+  skipAnnot: {{ testpmd_skip_annot }}
 {% endif %}
