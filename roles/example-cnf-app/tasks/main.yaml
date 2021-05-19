@@ -8,5 +8,13 @@
     msg: "app_version is required"
   when: "app_version|length == 0"
 
+- name: convert string to list if trex_mac_list is string
+  set_fact:
+    trex_mac_list: "{{ trex_mac_str.split(',') }}"
+  when:
+  - "trex_mac_str is defined"
+  - "trex_mac_str is string"
+  - "',' in trex_mac_str"
+
 - include_tasks: sub.yaml
 - include_tasks: app.yaml
