@@ -5,8 +5,9 @@ cnf_app_networks:
   - name: sriov-downlink
     count: 1
 
-testpmd_cpu: 3
-testpmd_forwarding_cores: 2
+testpmd_cpu: 6
+testpmd_hugepages: 8Gi
+testpmd_forwarding_cores: 4
 testpmd_privileged: true
 trex_privileged: true
 testpmd_skip_annot: true

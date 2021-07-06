@@ -22,8 +22,13 @@ spec:
 {% if testpmd_cpu|default('') %}
   cpu: {{ testpmd_cpu }}
 {% endif %}
+{% if testpmd_hugepages|default('') %}
+  hugepage_1gb_count: {{ testpmd_hugepages }}
+{% endif %}
 {% if testpmd_forwarding_cores|default('') %}
-  forwardingCores: {{ testpmd_forwarding_cores }}
+{% if testpmd_forwarding_cores|default('') %}
+  environments:
+    forwardingCores: {{ testpmd_forwarding_cores }}
 {% endif %}
 {% if testpmd_privileged|default(false)|bool %}
   privileged: {{ testpmd_privileged }}
