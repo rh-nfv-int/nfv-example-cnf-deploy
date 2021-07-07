@@ -23,9 +23,8 @@ spec:
   cpu: {{ testpmd_cpu }}
 {% endif %}
 {% if testpmd_hugepages|default('') %}
-  hugepage_1gb_count: {{ testpmd_hugepages }}
+  thugepage_1gb_count: {{ testpmd_hugepages }}
 {% endif %}
-{% if testpmd_forwarding_cores|default('') %}
 {% if testpmd_forwarding_cores|default('') %}
   environments:
     forwardingCores: {{ testpmd_forwarding_cores }}
