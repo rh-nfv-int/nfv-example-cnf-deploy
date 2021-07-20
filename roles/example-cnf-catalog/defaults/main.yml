@@ -1,14 +1,13 @@
 ---
 # Customizable variables
-cluster_name: cluster5
 operator_version: ""
-registry_url: "jumphost.{{ cluster_name }}.dfwt5g.lab:5000"
+registry_url: quay.io
 repo_name: nfv-example-cnf
 
+# Internal variables
 image_pull_policy: Always
-cluster_repo_name: "{{ repo_name }}"
 
 catalog_name: nfv-example-cnf-catalog
-catalog_image: "{{ registry_url }}/{{ cluster_repo_name }}/{{ catalog_name }}:{{ operator_version }}"
+catalog_image: "{{ registry_url }}/{{ repo_name }}/{{ catalog_name }}:{{ operator_version }}"
 
 cnf_namespace: example-cnf
