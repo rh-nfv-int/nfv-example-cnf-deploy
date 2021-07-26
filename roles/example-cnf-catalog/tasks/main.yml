@@ -14,6 +14,19 @@
   until: crd_info.resources|length != 0
   failed_when: crd_info.resources|length == 0
 
+- name: Inspect index image
+  shell:
+    cmd: >
+      skopeo inspect docker://{{ catalog_image }}
+  register: skopeo_inspect
+  until: skopeo_inspect.rc == 0
+  retries: 5
+  delay: 5
+
+- name: Get index digest
+  set_fact:
+    index_digest: "{{ skopeo_inspect.stdout | from_json | json_query('Digest') }}"
+
 - name: create catalogsource object for example-cnf
   k8s:
     state: present
@@ -25,7 +38,7 @@
         namespace: openshift-marketplace
       spec:
         sourceType: grpc
-        image: "{{ catalog_image }}"
+        image: "{{ registry_url }}/{{ repo_name }}/{{ catalog_name }}@{{ index_digest }}"
         displayName: NFV Example CNF Catalog
         updateStrategy:
           registryPoll:
