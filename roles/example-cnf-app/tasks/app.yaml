@@ -52,13 +52,14 @@
     - "enable_lb|bool"
     - "packet_generator_networks|length == 0"
 
-- name: Fail when cnf app networks is not available
+- name: Fail when cnf_app_networks or resources is not defined
   fail:
-    msg: "'cnf_app_networks' is required"
+    msg: "'cnf_app_networks' or 'resources' is required"
   when:
     - "cnf_app_networks|length == 0"
+    - "resources|length == 0"
 
-- name: Fail when both cnf app and packet generator networks are defined
+- name: MAC merging is not supported with multiple networks
   fail:
     msg: "MAC merging is not supported with multiple networks"
   when:
