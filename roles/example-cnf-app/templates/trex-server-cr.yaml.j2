@@ -16,16 +16,12 @@ spec:
   imagePullPolicy: {{ image_pull_policy }}
   networks: {{ networks_trex }}
   enableLb: {{ enable_lb }}
-{% if enable_lb|bool %}  
+{% if enable_lb|bool %}
   lbMacs: {{ lb_gen_port_mac_list }}
-{% endif %}  
+{% endif %}
   cpu: 4
 {% if trex_config_skip|default(false)|bool %}
   trex_config_skip: true
 {% endif %}
-{% if trex_privileged|default(false)|bool %}
-  privileged: {{ trex_privileged }}
-{% endif %}
-{% if trex_skip_annot|default(false)|bool %}
-  skipAnnot: {{ trex_skip_annot }}
-{% endif %}
+  privileged: {{ trex_privileged|default(false)|bool }}
+  skipAnnot: {{ trex_skip_annot|default(false)|bool }}
