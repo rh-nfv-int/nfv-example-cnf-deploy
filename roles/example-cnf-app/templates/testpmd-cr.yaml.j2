@@ -4,7 +4,7 @@ metadata:
   name: testpmd
   namespace: {{ cnf_namespace }}
 spec:
-  image_testpmd: registry.redhat.io/openshift4/dpdk-base-rhel8:v4.6
+  image_testpmd: {{ image_testpmd }}
   privileged: false
   imagePullPolicy: {{ image_pull_policy }}
 {% if enable_lb|bool %}

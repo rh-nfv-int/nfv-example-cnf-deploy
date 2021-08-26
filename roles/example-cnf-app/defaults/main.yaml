@@ -13,6 +13,10 @@ termination_grace_period_seconds: 30
 
 image_pull_policy: Always
 catalog_name: nfv-example-cnf-catalog
+# To guarantee support to disconnected environments, this image must be the
+# same as the one used by the testpmd-operator and must use its digest.
+# https://github.com/rh-nfv-int/testpmd-operator/blob/master/relatedImages.yaml#L3
+image_testpmd: "registry.redhat.io/openshift4/dpdk-base-rhel8@sha256:9af03fb4c5ae1c51f71ad04f02fee8e9458aa73c3f4324e984c731d07896c4e1"  # v4.6.3
 
 cnf_namespace: example-cnf
 
