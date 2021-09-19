@@ -15,14 +15,18 @@
   k8s_info:
     kind: ClusterVersion
   register: cluster_version
-- fail:
-    msg: "CluterVersion object version is not available"
-  when: "{{ cluster_version.resources[0].spec.channel|length == 0 }}"
+
+- name: Fail ClusterVersion when is not available
+  fail:
+    msg: "ClusterVersion object version is not available"
+  when: cluster_version.resources[0].spec.channel|length == 0
+
 - name: Parse the major and minor version from channel
   set_fact:
     ocp_version: "{{ cluster_version.resources[0].spec.channel.split('-')[1] }}"
     ocp_major: "{{ cluster_version.resources[0].spec.channel.split('-')[1].split('.')[0] }}"
     ocp_minor: "{{ cluster_version.resources[0].spec.channel.split('-')[1].split('.')[1] }}"
+
 - name: Set mac workaround
   set_fact:
     mac_workaround_enable: true
@@ -35,20 +39,27 @@
     kind: Node
   register: nodes
   no_log: true
-- fail:
+
+- name: Fail when the minimum workers are not met
+  fail:
     msg: "Minimum 2 worker nodes are required to run example-cnf applications"
   when: "nodes.resources|length < 2"
 
-- fail:
+- name: Fail when packet generator network is not available
+  fail:
     msg: "'packet_generator_networks' is required when deployed with LB"
   when:
     - "enable_lb|bool"
     - "packet_generator_networks|length == 0"
-- fail:
+
+- name: Fail when cnf app networks is not available
+  fail:
     msg: "'cnf_app_networks' is required"
   when:
     - "cnf_app_networks|length == 0"
-- fail:
+
+- name: Fail when both cnf app and packet generator networks are defined
+  fail:
     msg: "MAC merging is not supported with multiple networks"
   when: "cnf_app_networks|length > 1 or (enable_lb|bool and packet_generator_networks|length > 1)"
 
@@ -56,12 +67,14 @@
   set_fact:
     pack_nw: []
     cnf_nw: []
+
 - name: create packet gen network list for lb with hardcoded macs
   set_fact:
     pack_nw: "{{ pack_nw + [ item | combine({ 'mac': lb_gen_port_mac_list[idx:idx+item.count] }) ] }}"
   loop: "{{ packet_generator_networks }}"
   loop_control:
     index_var: idx
+
 - name: create cnf app network list for lb with hardcoded macs
   set_fact:
     cnf_nw: "{{ cnf_nw + [ item | combine({ 'mac': lb_cnf_port_mac_list[idx:idx+item.count] }) ] }}"
@@ -88,6 +101,7 @@
   delay: 5
   until:
     - testpmd_pods.resources|length >= 1
+
 - name: check testpmd pod status to be running
   k8s_info:
     namespace: "{{ cnf_namespace }}"
@@ -111,34 +125,11 @@
     - mac.resources|length > 0
 
 - name: trex cr block
+  include_tasks: retry-trex.yaml
   when: enable_trex|bool
-  block:
-    - name: include trex tasks to create app
-      include_tasks: trex/app.yaml
-    - name: restart trex once if the packet generation has not started
-      block:
-        - name: delete trexconfig cr
-          k8s:
-            namespace: "{{ cnf_namespace }}"
-            kind: TRexConfig
-            name: "{{ trex_cr_name }}"
-            state: absent
-        - pause:
-            seconds: 45
-        - name: re-run trex tasks to create app again
-          include_tasks: trex/app.yaml
-      when:
-        - enable_trex_app|bool
-        - trex_retry|default(true)|bool
-        - not trex_app_run_passed|default(false)|bool
-    - name: fail if trex is not passed
-      fail:
-        msg: "TRex App Run has failed!!"
-      when:
-      - enable_trex_app|bool
-      - not trex_app_run_passed|default(false)|bool
-    - name: trex additional tests
-      include_tasks: trex/tests.yaml
-      when:
-      - enable_trex_app|bool
-      - trex_test_config|length > 0
+
+- name: trex additional tests
+  include_tasks: trex/tests.yaml
+  when:
+    - enable_trex_app|bool
+    - trex_test_config|length > 0

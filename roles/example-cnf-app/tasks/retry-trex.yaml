@@ -1,0 +1,36 @@
+---
+- name: Set retry variables
+  set_fact:
+    trex_app_retry_count: "{{ trex_app_retry_count | default(0) | int + 1 }}"
+    trex_app_retry_max: "{{ trex_app_retry_max | default(5) | int }}"
+
+- name: Deploy trex app (with retries)
+  block:
+    - name: include trex tasks to create app
+      include_tasks: trex/app.yaml
+
+    - name: Fail when run did not pass
+      fail:
+        msg: "TRex App run has failed"
+      when: not trex_app_run_passed | default(false) | bool
+
+  rescue:
+    - name: Fail when max retries have been reached ({{ trex_app_retry_count }}/{{ trex_app_retry_max }})
+      fail:
+        msg: "Maximum retries have been reached"
+      when:
+        - trex_app_retry_count | int == trex_app_retry_max | int
+
+    - name: delete trexconfig cr
+      k8s:
+        namespace: "{{ cnf_namespace }}"
+        kind: TRexConfig
+        name: "{{ trex_cr_name }}"
+        state: absent
+
+    - name: Wait a few seconds to delete trex config
+      pause:
+        seconds: 45
+
+    - name: Re-run TRex App to try again
+      include_tasks: retry-trex.yaml
