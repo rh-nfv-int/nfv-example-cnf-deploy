@@ -22,6 +22,20 @@
       when:
         - trex_app_retry_count | int == trex_app_retry_max | int
 
+    - name: Retrieve TRex app logs
+      k8s_logs:
+        name: "{{ trex_app_cr_name }}"
+        namespace: "{{ cnf_namespace }}"
+      register: trex_app_logs
+
+    - name: Store logs when jobs_logs is defined
+      copy:
+        content: "{{ trex_app_logs.log }}"
+        dest: "{{ jobs_logs.path }}/{{ trex_app_cr_name }}-{{ trex_app_retry_count }}.log"
+      when:
+        - jobs_logs is defined
+        - jobs_logs.path is defined
+
     - name: delete trexconfig cr
       k8s:
         namespace: "{{ cnf_namespace }}"
