@@ -23,7 +23,7 @@
         - trex_app_retry_count | int == trex_app_retry_max | int
 
     - name: Retrieve TRex app logs
-      k8s_logs:
+      community.kubernetes.k8s_log:
         name: "{{ trex_app_cr_name }}"
         namespace: "{{ cnf_namespace }}"
       register: trex_app_logs
