@@ -1,6 +1,7 @@
 ---
 - name: Set retry variables
   set_fact:
+    trex_app_cr_name: trex-app1
     trex_app_retry_count: "{{ trex_app_retry_count | default(0) | int + 1 }}"
     trex_app_retry_max: "{{ trex_app_retry_max | default(5) | int }}"
 
@@ -21,6 +22,20 @@
       when:
         - trex_app_retry_count | int == trex_app_retry_max | int
 
+    - name: Retrieve TRex app logs
+      community.kubernetes.k8s_log:
+        name: "{{ trex_app_cr_name }}"
+        namespace: "{{ cnf_namespace }}"
+      register: trex_app_logs
+
+    - name: Store logs when jobs_logs is defined
+      copy:
+        content: "{{ trex_app_logs.log }}"
+        dest: "{{ jobs_logs.path }}/{{ trex_app_cr_name }}-{{ trex_app_retry_count }}.log"
+      when:
+        - jobs_logs is defined
+        - jobs_logs.path is defined
+
     - name: delete trexconfig cr
       k8s:
         namespace: "{{ cnf_namespace }}"
@@ -28,9 +43,23 @@
         name: "{{ trex_cr_name }}"
         state: absent
 
-    - name: Wait a few seconds to delete trex config
-      pause:
-        seconds: 45
+    - name: delete trexapp cr
+      k8s:
+        namespace: "{{ cnf_namespace }}"
+        kind: TRexApp
+        name: "{{ trex_app_cr_name }}"
+        state: absent
+
+    - name: check trex server pod to be deleted
+      k8s_info:
+        namespace: "{{ cnf_namespace }}"
+        kind: Pod
+        label_selectors:
+          - example-cnf-type=pkt-gen
+      register: trex_result
+      retries: 30
+      delay: 5
+      until: "trex_result.resources|length == 0"
 
     - name: Re-run TRex App to try again
       include_tasks: retry-trex.yaml

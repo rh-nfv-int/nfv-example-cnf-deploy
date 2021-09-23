@@ -43,7 +43,6 @@
   block:
   - name: set trex app cr name
     set_fact:
-      trex_app_cr_name: trex-app1
       duration: 120
   - name: create cr for trex app
     k8s:
@@ -61,7 +60,7 @@
     register: trex_event
     retries: 60
     delay: 5
-  
+
   - name: wait trex app run complete event
     k8s_info:
       namespace: "{{ cnf_namespace }}"
