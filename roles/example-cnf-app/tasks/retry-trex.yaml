@@ -33,10 +33,10 @@
     - name: Store logs when jobs_logs is defined
       copy:
         content: "{{ trex_app_logs.log }}"
-        dest: "{{ jobs_logs.path }}/{{ trex_app_cr_name }}-{{ trex_app_retry_count }}.log"
+        dest: "{{ job_logs.path }}/{{ trex_app_cr_name }}-{{ trex_app_retry_count }}.log"
       when:
-        - jobs_logs is defined
-        - jobs_logs.path is defined
+        - job_logs is defined
+        - job_logs.path is defined
 
     - name: delete trexconfig cr
       k8s:
