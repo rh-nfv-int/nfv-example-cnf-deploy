@@ -24,8 +24,9 @@
 
     - name: Retrieve TRex app logs
       community.kubernetes.k8s_log:
-        name: "{{ trex_app_cr_name }}"
         namespace: "{{ cnf_namespace }}"
+        label_selectors:
+          - example-cnf-type=pkt-gen
       register: trex_app_logs
 
     - name: Store logs when jobs_logs is defined
