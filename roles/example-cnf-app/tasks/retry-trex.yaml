@@ -24,17 +24,19 @@
 
     - name: Retrieve TRex app logs
       community.kubernetes.k8s_log:
-        name: "{{ trex_app_cr_name }}"
         namespace: "{{ cnf_namespace }}"
+        label_selectors:
+          - example-cnf-type=pkt-gen-app
+          - job-name=job-{{ trex_app_cr_name }}
       register: trex_app_logs
 
     - name: Store logs when jobs_logs is defined
       copy:
         content: "{{ trex_app_logs.log }}"
-        dest: "{{ jobs_logs.path }}/{{ trex_app_cr_name }}-{{ trex_app_retry_count }}.log"
+        dest: "{{ job_logs.path }}/{{ trex_app_cr_name }}-{{ trex_app_retry_count }}.log"
       when:
-        - jobs_logs is defined
-        - jobs_logs.path is defined
+        - job_logs is defined
+        - job_logs.path is defined
 
     - name: delete trexconfig cr
       k8s:
