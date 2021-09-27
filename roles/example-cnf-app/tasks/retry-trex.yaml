@@ -26,7 +26,8 @@
       community.kubernetes.k8s_log:
         namespace: "{{ cnf_namespace }}"
         label_selectors:
-          - example-cnf-type=pkt-gen
+          - example-cnf-type=pkt-gen-app
+          - job-name=job-{{ trex_app_cr_name }}
       register: trex_app_logs
 
     - name: Store logs when jobs_logs is defined
