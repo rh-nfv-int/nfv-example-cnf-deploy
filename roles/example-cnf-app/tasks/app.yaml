@@ -57,7 +57,7 @@
     msg: "'cnf_app_networks' or 'resources' is required"
   when:
     - "cnf_app_networks|length == 0"
-    - "resources|length == 0"
+    - "resources|default([])|length == 0"
 
 - name: MAC merging is not supported with multiple networks
   fail:

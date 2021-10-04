@@ -27,8 +27,8 @@ spec:
   hugepage_1gb_count: {{ testpmd_hugepages }}
 {% endif %}
 {% if testpmd_forwarding_cores|default('') %}
-  environments:
-    forwardingCores: {{ testpmd_forwarding_cores }}
+  forwardingCores: {{ testpmd_forwarding_cores }}
 {% endif %}
   privileged: {{ testpmd_privileged|default(false)|bool }}
   skipAnnot: {{ testpmd_skip_annot|default(false)|bool }}
+  skipResource: {{ testpmd_skip_resource|default(False)|bool }}
