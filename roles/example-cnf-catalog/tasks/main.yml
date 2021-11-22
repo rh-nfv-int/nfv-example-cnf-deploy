@@ -51,7 +51,7 @@
     name: testpmd-operator
     namespace: default
   register: pkg_manifest_testpmd
-  retries: 30
+  retries: 60
   delay: 5
   until: pkg_manifest_testpmd.resources|length != 0
   failed_when: pkg_manifest_testpmd.resources|length == 0
