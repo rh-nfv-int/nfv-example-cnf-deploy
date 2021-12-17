@@ -29,6 +29,7 @@
           - example-cnf-type=pkt-gen-app
           - job-name=job-{{ trex_app_cr_name }}
       register: trex_app_logs
+      ignore_errors: true
 
     - name: Store logs when jobs_logs is defined
       copy:
@@ -37,6 +38,8 @@
       when:
         - job_logs is defined
         - job_logs.path is defined
+        - trex_app_logs.stderr | length == 0
+      ignore_errors: true
 
     - name: delete trexconfig cr
       k8s:
