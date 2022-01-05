@@ -38,7 +38,7 @@
       when:
         - job_logs is defined
         - job_logs.path is defined
-        - trex_app_logs.stderr | length == 0
+        - not trex_app_logs.failed
       ignore_errors: true
 
     - name: delete trexconfig cr
