@@ -3,6 +3,9 @@
   k8s:
     definition: "{{ lookup('template', 'lb-cr.yaml.j2') }}"
 
+- name: Wait for updated MC to be applied on the nodes and retrieve logs
+  include_tasks: mcp_wait_and_logs.yml
+
 - name: check loadbalacer pod count to be 1
   k8s_info:
     namespace: "{{ cnf_namespace }}"
