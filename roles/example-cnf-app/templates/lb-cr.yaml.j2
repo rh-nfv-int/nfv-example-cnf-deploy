@@ -13,7 +13,6 @@ spec:
   packet_generator_macs: {{ trex_mac_list }}
   rx_queues: {{ queues|default(1) }}
   tx_queues: {{ queues|default(1) }}
-  cpu: 10
   memory: 20Gi
   hugepage_1gb_count: 16Gi
   forwarding_cores: 8
