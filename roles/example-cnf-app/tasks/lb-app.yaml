@@ -3,17 +3,6 @@
   k8s:
     definition: "{{ lookup('template', 'lb-cr.yaml.j2') }}"
 
-- name: check loadbalacer pod count to be 1
-  k8s_info:
-    namespace: "{{ cnf_namespace }}"
-    kind: Pod
-    label_selectors:
-      - example-cnf-type=lb-app
-  register: lb_pods
-  retries: 60
-  delay: 5
-  until:
-    - lb_pods.resources|length == 1
 - name: check loadbalancer pod status to be running
   k8s_info:
     namespace: "{{ cnf_namespace }}"
@@ -21,8 +10,12 @@
     label_selectors:
       - example-cnf-type=lb-app
   register: lb_pods
+  vars:
+    container_query: "resources[0].status.containerStatuses[?name=='loadbalancer'].state.running"
+    container_status: "{{ lb_pods | json_query(container_query) }}"
   retries: 60
   delay: 5
   until:
+    - lb_pods.resources | length == 1
     - lb_pods.resources[0].status.phase == 'Running'
-
+    - container_status | bool
