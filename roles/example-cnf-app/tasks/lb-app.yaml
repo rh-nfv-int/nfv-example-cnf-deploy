@@ -11,11 +11,11 @@
       - example-cnf-type=lb-app
   register: lb_pods
   vars:
-    container_query: "resources[0].status.containerStatuses[?name=='loadbalancer'].state.running"
-    container_status: "{{ lb_pods | json_query(container_query) }}"
+    terminated: "resources[0].status.containerStatuses[?name=='loadbalancer'].state.terminated"
+    terminated_containers: "{{ lb_pods | json_query(terminated) }}"
   retries: 60
   delay: 5
   until:
     - lb_pods.resources | length == 1
-    - lb_pods.resources[0].status.phase == 'Running'
-    - container_status | bool
+    - lb_pods.resources[0].status.phase in ['Running', 'Pending']
+    - terminated_containers | length == 0
