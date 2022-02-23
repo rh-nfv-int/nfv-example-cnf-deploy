@@ -18,4 +18,4 @@
   until:
     - lb_pods.resources | length == 1
     - lb_pods.resources[0].status.phase == 'Running'
-    - container_status | bool
+    - container_status | length > 0
