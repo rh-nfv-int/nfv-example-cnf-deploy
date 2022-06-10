@@ -50,6 +50,7 @@
     vars:
       packet_rate: 10kpps
       packet_size: 64
+
   - name: wait for trex app run start event
     k8s_info:
       namespace: "{{ cnf_namespace }}"
@@ -60,6 +61,7 @@
     register: trex_event
     retries: 60
     delay: 5
+    until: trex_event.resources | length > 0
 
   - name: wait trex app run complete event
     k8s_info:
@@ -72,6 +74,7 @@
     retries: 60
     delay: 5
     until: trex_event.resources|length > 0
+
   - name: get test passed event from trex
     k8s_info:
       namespace: "{{ cnf_namespace }}"
@@ -80,6 +83,10 @@
         - "reason==TestPassed"
         - "involvedObject.name={{ trex_app_cr_name }}"
     register: trex_result
+    retries: 5
+    delay: 5
+    until: trex_results.resources | length > 0
+
   - name: get packet matched event from trex
     k8s_info:
       namespace: "{{ cnf_namespace }}"
