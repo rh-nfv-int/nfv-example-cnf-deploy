@@ -49,3 +49,5 @@ trex_core_count: 0
 #    trex_profile_path: ''
 #    trex_profile_cm_name: ''
 trex_test_config: []
+
+testpmd_skip_resource: false

@@ -1,0 +1,25 @@
+---
+cnf_app_networks:
+  - name: sriov-uplink
+    count: 1
+  - name: sriov-downlink
+    count: 1
+
+testpmd_cpu: 6
+testpmd_hugepages: 8Gi
+testpmd_forwarding_cores: 4
+testpmd_privileged: true
+trex_privileged: true
+testpmd_skip_annot: true
+trex_skip_annot: true
+
+enable_trex: false
+enable_lb: false
+
+cluster_name: ''
+operator_version: v0.2.8
+app_version: v0.2.2
+registry_url: quay.io
+repo_name: rh-nfv-int
+
+testpmd_node_count: 1

@@ -6,6 +6,13 @@
       name: example-cnf-destroy
   - command: oc delete namespace example-cnf
   - command: oc create namespace example-cnf
-  - pause:
-      seconds: 15
-  - command: /home/kni/cluster-deploy-configs/configs/ocp/prune.sh
+  - name: check if prune file exists
+    stat:
+      path: /home/kni/cluster-deploy-configs/configs/ocp/prune.sh
+    register: prune_file
+  - name: run image prune
+    when: prune_file.stat.exists|bool
+    block:
+    - pause:
+        seconds: 15
+    - command: /home/kni/cluster-deploy-configs/configs/ocp/prune.sh

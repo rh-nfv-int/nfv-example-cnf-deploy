@@ -90,6 +90,7 @@
   retries: 30
   delay: 5
   until:
+    - "'resources' in csv"
     - "csv.resources|length == 1"
     - "'status' in csv.resources[0]"
     - "'phase' in csv.resources[0].status"
