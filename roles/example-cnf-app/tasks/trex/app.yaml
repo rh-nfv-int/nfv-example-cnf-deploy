@@ -85,7 +85,7 @@
     register: trex_result
     retries: 5
     delay: 5
-    until: trex_results.resources | length > 0
+    until: trex_result.resources | length > 0
 
   - name: get packet matched event from trex
     k8s_info:
