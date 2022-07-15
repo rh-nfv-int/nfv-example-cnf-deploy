@@ -4,13 +4,14 @@ operator_version: ""
 app_version: ""
 registry_url: quay.io
 repo_name: rh-nfv-int
+enable_lb: true
+enable_mac_fetch: true
+enable_testpmd: true
 enable_trex: true
 enable_trex_app: true
-enable_lb: true
 
 # Internal variables
 termination_grace_period_seconds: 30
-
 image_pull_policy: Always
 catalog_name: nfv-example-cnf-catalog
 # To guarantee support to disconnected environments, this image must be the
@@ -19,19 +20,18 @@ catalog_name: nfv-example-cnf-catalog
 image_testpmd: "registry.redhat.io/openshift4/dpdk-base-rhel8@sha256:9af03fb4c5ae1c51f71ad04f02fee8e9458aa73c3f4324e984c731d07896c4e1"  # v4.6.3
 
 cnf_namespace: example-cnf
-
-testpmd_channel: alpha
-trex_channel: alpha
-
 trex_cr_name: trexconfig
 
-trex_mac_list: ["20:04:0f:f1:89:01","20:04:0f:f1:89:02"]
-
-lb_gen_port_mac_list: ["40:04:0f:f1:89:01","40:04:0f:f1:89:02"]
-lb_cnf_port_mac_list: ["60:04:0f:f1:89:01","60:04:0f:f1:89:02"]
-
+trex_mac_list:
+  - "20:04:0f:f1:89:01"
+  - "20:04:0f:f1:89:02"
+lb_gen_port_mac_list:
+  - "40:04:0f:f1:89:01"
+  - "40:04:0f:f1:89:02"
+lb_cnf_port_mac_list:
+  - "60:04:0f:f1:89:01"
+  - "60:04:0f:f1:89:02"
 cnf_app_networks: []
-
 packet_generator_networks: []
 
 packet_rate: 10kpps
