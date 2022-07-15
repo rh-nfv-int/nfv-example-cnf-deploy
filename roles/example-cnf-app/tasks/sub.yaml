@@ -2,7 +2,7 @@
 - name: "Install enabled operators"
   include_tasks: install-operator.yaml
   loop:
-    - name: mac-fetch-operator
+    - name: cnf-app-mac-operator
       namespace: "{{ cnf_namespace }}"
       channel: "{{ testpmd_channel | default(omit) }}"
       source: "{{ catalog_name }}"
