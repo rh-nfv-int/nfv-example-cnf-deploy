@@ -4,25 +4,25 @@
   loop:
     - name: cnf-app-mac-operator
       namespace: "{{ cnf_namespace }}"
-      channel: "{{ testpmd_channel | default(omit) }}"
+      channel: "{{ testpmd_channel | default('') }}"
       source: "{{ catalog_name }}"
       source_ns: "openshift-marketplace"
       enable: "{{ enable_mac_fetch | bool }}"
     - name: testpmd-lb-operator
       namespace: "{{ cnf_namespace }}"
-      channel: "{{ testpmd_channel | default(omit) }}"
+      channel: "{{ testpmd_channel | default('') }}"
       source: "{{ catalog_name }}"
       source_ns: "openshift-marketplace"
       enable: "{{ enable_lb | bool }}"
     - name: testpmd-operator
       namespace: "{{ cnf_namespace }}"
-      channel: "{{ testpmd_channel | default(omit) }}"
+      channel: "{{ testpmd_channel | default('') }}"
       source: "{{ catalog_name }}"
       source_ns: "openshift-marketplace"
       enable: "{{ enable_testpmd | bool }}"
     - name: trex-operator
       namespace: "{{ cnf_namespace }}"
-      channel: "{{ trex_channel | default(omit) }}"
+      channel: "{{ trex_channel | default('') }}"
       source: "{{ catalog_name }}"
       source_ns: "openshift-marketplace"
       enable: "{{ enable_trex | bool }}"

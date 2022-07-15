@@ -12,7 +12,7 @@
         name: "{{ operator.name }}"
         namespace: "{{ operator.namespace }}"
       spec:
-        channel: "{{ operator.channel | default(omit) }}"
+        channel: "{{ (operator.channel == '') | ternary(omit, operator.channel) }}"
         config:
           resources: {}
         name: "{{ operator.name }}"
@@ -39,7 +39,8 @@
 
 - name: "Get operator's CSV for desired channel"
   vars:
-    current_csv: "resources[*].status.channels[? name=='{{ operator.channel | default ( default_channel ) }}' ].currentCSV | [0]"
+    channel: "{{ (operator.channel == '') | ternary(default_channel, operator.channel) }}"
+    current_csv: "resources[*].status.channels[? name=='{{ channel }}' ].currentCSV | [0]"
   set_fact:
     operator_csv: "{{ packagemanifest | json_query(current_csv) | first }}"
 
