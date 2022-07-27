@@ -122,6 +122,7 @@
   retries: 120
   delay: 5
   until:
+    - mac.resources is defined
     - mac.resources|length > 0
 
 - name: trex cr block
