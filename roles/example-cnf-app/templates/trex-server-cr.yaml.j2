@@ -4,7 +4,7 @@ metadata:
   namespace: {{ cnf_namespace }}
   name: {{ trex_cr_name }}
   annotations:
-    "ansible.sdk.operatorframework.io/verbosity": "0"
+    "ansible.sdk.operatorframework.io/verbosity": "4"
 spec:
 {% if trex_core_count|int > 0 %}
   environments:

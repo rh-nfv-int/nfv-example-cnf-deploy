@@ -4,7 +4,7 @@ metadata:
   namespace: {{ cnf_namespace }}
   name: {{ trex_app_cr_name }}
   annotations:
-    "ansible.sdk.operatorframework.io/verbosity": "1"
+    "ansible.sdk.operatorframework.io/verbosity": "4"
     "ansible.sdk.operatorframework.io/reconcile-period": "1m"
 spec:
 {% if packet_rate|default('') %}
