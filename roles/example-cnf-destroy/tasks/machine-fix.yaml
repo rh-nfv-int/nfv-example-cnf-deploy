@@ -8,7 +8,7 @@
     msg: "Nodes = {{ nodes.resources|length }}"
 - name: get all machines
   k8s_info:
-    api_version: machine.openshift.io/v1beta1
+    api_version: machine.openshift.io/v1
     kind: Machine
     namespace: openshift-machine-api
   register: machines

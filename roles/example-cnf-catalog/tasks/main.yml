@@ -68,11 +68,16 @@
   until: pkg_manifest_trex.resources|length != 0
   failed_when: pkg_manifest_trex.resources|length == 0
 
-- name: create namespace
+- name: Create namespace
   k8s:
-    api_version: v1
-    name: "{{ cnf_namespace }}"
-    kind: Namespace
+    definition:
+      api_version: v1
+      kind: Namespace
+      metadata:
+        name: "{{ cnf_namespace }}"
+        labels:
+          pod-security.kubernetes.io/enforce: privileged
+          pod-security.kubernetes.io/enforce-version: latest
 
 - name: create operatorgroup
   k8s:
