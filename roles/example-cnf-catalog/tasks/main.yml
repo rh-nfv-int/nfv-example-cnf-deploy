@@ -40,33 +40,22 @@
         sourceType: grpc
         image: "{{ registry_url }}/{{ repo_name }}/{{ catalog_name }}@{{ index_digest }}"
         displayName: NFV Example CNF Catalog
+        publisher: "Red Hat"
         updateStrategy:
           registryPoll:
             interval: 30m
 
-- name: wait for testpmd-operator packagemanifests creation
-  k8s_info:
-    api_version: packages.operators.coreos.com/v1
-    kind: PackageManifest
-    name: testpmd-operator
-    namespace: default
-  register: pkg_manifest_testpmd
+- name: Wait for example-cnf CatalogSource to be Ready
+  community.kubernetes.k8s_info:
+    api: operators.coreos.com/v1alpha1
+    kind: CatalogSource
+    name: "{{ catalog_name }}"
+    namespace: openshift-marketplace
+  register: cs_status
+  until:
+    - cs_status | json_query('resources[0].status.connectionState.lastObservedState') == 'READY'
   retries: 60
-  delay: 5
-  until: pkg_manifest_testpmd.resources|length != 0
-  failed_when: pkg_manifest_testpmd.resources|length == 0
-
-- name: wait for trex-operator packagemanifests creation
-  k8s_info:
-    api_version: packages.operators.coreos.com/v1
-    kind: PackageManifest
-    name: trex-operator
-    namespace: default
-  register: pkg_manifest_trex
-  retries: 30
-  delay: 5
-  until: pkg_manifest_trex.resources|length != 0
-  failed_when: pkg_manifest_trex.resources|length == 0
+  delay: 10
 
 - name: Create namespace
   k8s:
@@ -78,6 +67,7 @@
         labels:
           pod-security.kubernetes.io/enforce: privileged
           pod-security.kubernetes.io/enforce-version: latest
+          security.openshift.io/scc.podSecurityLabelSync: "false"
 
 - name: create operatorgroup
   k8s:
@@ -89,3 +79,28 @@
       spec:
         targetNamespaces:
           - "{{ cnf_namespace }}"
+
+- name: Wait for testpmd-operator packagemanifests availability
+  k8s_info:
+    api_version: packages.operators.coreos.com/v1
+    kind: PackageManifest
+    name: testpmd-operator
+    namespace: default
+  register: pkg_manifest_testpmd
+  retries: 60
+  delay: 5
+  until: pkg_manifest_testpmd.resources|length != 0
+  failed_when: pkg_manifest_testpmd.resources|length == 0
+
+- name: Wait for trex-operator packagemanifests availability
+  k8s_info:
+    api_version: packages.operators.coreos.com/v1
+    kind: PackageManifest
+    name: trex-operator
+    namespace: default
+  register: pkg_manifest_trex
+  retries: 30
+  delay: 5
+  until: pkg_manifest_trex.resources|length != 0
+  failed_when: pkg_manifest_trex.resources|length == 0
+...
