@@ -93,7 +93,7 @@
   failed_when: pkg_manifest_testpmd.resources|length == 0
 
 - name: Wait for trex-operator packagemanifests availability
-  k8s_info:
+  community.kubernetes.k8s_info:
     api_version: packages.operators.coreos.com/v1
     kind: PackageManifest
     name: trex-operator
