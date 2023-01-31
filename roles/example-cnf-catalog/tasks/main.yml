@@ -5,7 +5,7 @@
   when: "operator_version|length == 0"
 
 - name: check if catalogsource crd is present
-  k8s_info:
+  community.kubernetes.k8s_info:
     kind: CustomResourceDefinition
     name: catalogsources.operators.coreos.com
   register: crd_info
@@ -28,7 +28,7 @@
     index_digest: "{{ skopeo_inspect.stdout | from_json | json_query('Digest') }}"
 
 - name: create catalogsource object for example-cnf
-  k8s:
+  community.kubernetes.k8s:
     state: present
     definition:
       apiVersion: operators.coreos.com/v1alpha1
@@ -40,12 +40,48 @@
         sourceType: grpc
         image: "{{ registry_url }}/{{ repo_name }}/{{ catalog_name }}@{{ index_digest }}"
         displayName: NFV Example CNF Catalog
+        publisher: "Red Hat"
         updateStrategy:
           registryPoll:
             interval: 30m
 
-- name: wait for testpmd-operator packagemanifests creation
-  k8s_info:
+- name: Wait for example-cnf CatalogSource to be Ready
+  community.kubernetes.k8s_info:
+    api: operators.coreos.com/v1alpha1
+    kind: CatalogSource
+    name: "{{ catalog_name }}"
+    namespace: openshift-marketplace
+  register: cs_status
+  until:
+    - cs_status | json_query('resources[0].status.connectionState.lastObservedState') == 'READY'
+  retries: 60
+  delay: 10
+
+- name: Create namespace
+  community.kubernetes.k8s:
+    definition:
+      api_version: v1
+      kind: Namespace
+      metadata:
+        name: "{{ cnf_namespace }}"
+        labels:
+          pod-security.kubernetes.io/enforce: privileged
+          pod-security.kubernetes.io/enforce-version: latest
+          security.openshift.io/scc.podSecurityLabelSync: "false"
+
+- name: create operatorgroup
+  community.kubernetes.k8s:
+    api_version: operators.coreos.com/v1
+    name: example-cnf-operator-group
+    kind: OperatorGroup
+    namespace: "{{ cnf_namespace }}"
+    definition:
+      spec:
+        targetNamespaces:
+          - "{{ cnf_namespace }}"
+
+- name: Wait for testpmd-operator packagemanifests availability
+  community.kubernetes.k8s_info:
     api_version: packages.operators.coreos.com/v1
     kind: PackageManifest
     name: testpmd-operator
@@ -56,8 +92,8 @@
   until: pkg_manifest_testpmd.resources|length != 0
   failed_when: pkg_manifest_testpmd.resources|length == 0
 
-- name: wait for trex-operator packagemanifests creation
-  k8s_info:
+- name: Wait for trex-operator packagemanifests availability
+  community.kubernetes.k8s_info:
     api_version: packages.operators.coreos.com/v1
     kind: PackageManifest
     name: trex-operator
@@ -67,25 +103,4 @@
   delay: 5
   until: pkg_manifest_trex.resources|length != 0
   failed_when: pkg_manifest_trex.resources|length == 0
-
-- name: Create namespace
-  k8s:
-    definition:
-      api_version: v1
-      kind: Namespace
-      metadata:
-        name: "{{ cnf_namespace }}"
-        labels:
-          pod-security.kubernetes.io/enforce: privileged
-          pod-security.kubernetes.io/enforce-version: latest
-
-- name: create operatorgroup
-  k8s:
-    api_version: operators.coreos.com/v1
-    name: example-cnf-operator-group
-    kind: OperatorGroup
-    namespace: "{{ cnf_namespace }}"
-    definition:
-      spec:
-        targetNamespaces:
-          - "{{ cnf_namespace }}"
+...
