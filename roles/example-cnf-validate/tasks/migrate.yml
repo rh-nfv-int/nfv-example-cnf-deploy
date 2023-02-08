@@ -9,19 +9,16 @@
     msg: "TestPMD CRs count ({{ testpmd_list.resources|length }}) is invalid "
   when: "testpmd_list.resources|length != 1"
 
-# Ensure there is atleast one patcket matched event
-- name: get packet matched event from trex
+- name: Wait for at least one PacketMatched event from TRex
   k8s_info:
     namespace: "{{ cnf_namespace }}"
     kind: Event
     field_selectors:
       - reason==PacketMatched
   register: matched
-  no_log: true
-- name: fail if no packet matched event is found from trex
-  fail:
-    msg: "PacketMatched event is not found in TRexConfig CR"
-  when: matched.resources|length == 0
+  retries: 12
+  delay: 5
+  until: matched.resources | length > 0
 
 - name: kubeconfig path if not available
   when: "kubeconfig_path|default('')|length == 0"
