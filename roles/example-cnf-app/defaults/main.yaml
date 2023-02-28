@@ -10,6 +10,9 @@ enable_testpmd: true
 enable_trex: true
 enable_trex_app: true
 
+# If set to true, wait until the end of the profile duration before continue
+trex_tests_wait: true
+
 # Internal variables
 termination_grace_period_seconds: 30
 image_pull_policy: Always
