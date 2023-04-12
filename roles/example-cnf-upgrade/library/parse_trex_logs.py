@@ -84,9 +84,11 @@ def get_missing_list(module, result):
 
     missing = []
     for i in range(0, len(combine), 2):
-        if combine[i]['reason'] != 'PacketDropped':
-            result['message'] = ("Resson %s is not valid" % combine[i]['reason'])
-            return False
+        if combine[i]['reason'] != 'PacketDropped' and len(combine) > (i+1):
+            result['warning'] = ("Resson %s is not valid" % combine[i]['reason'])
+            if combine[i+1]['reason'] == 'PacketDropped':
+                del combine[i]
+            continue
 
         # Handle when the last event is PacketDropped (no recovery event)
         if len(combine) == (i + 1):
