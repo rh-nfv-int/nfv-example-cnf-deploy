@@ -7,23 +7,9 @@
     kind: NetworkAttachmentDefinition
     namespace: "{{ cnf_namespace }}"
   register: net_list
-  async: 30
-  poll: 2
-  failed_when: "net_list|length == 0"
-
-- name: Wait for net-attach-def presence
-  async_status:
-    jid: "{{ net_list.ansible_job_id }}"
-  register: job_result
-  until: job_result.finished
-  retries: 30
+  until: net_list.resources | length > 0
+  retries: 9
   delay: 10
-  ignore_errors: true
-
-- name: "Async cleanup"
-  async_status:
-    jid: "{{ net_list.ansible_job_id }}"
-    mode: cleanup
 
 - name: Get the clusterversion info
   k8s_info:
