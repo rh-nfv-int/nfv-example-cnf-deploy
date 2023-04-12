@@ -1,15 +1,15 @@
 ---
 # NetworkAttachmentDefintions should be created on the namespace, it
 # will be created by sriov operator, when SriovNetwork resource is created
-- name: check for net-attach-def presence in the namepsace
+- name: check for net-attach-def presence in the namespace
   k8s_info:
     api_version: k8s.cni.cncf.io/v1
     kind: NetworkAttachmentDefinition
     namespace: "{{ cnf_namespace }}"
   register: net_list
-  async: 30
-  poll: 2
-  failed_when: "net_list|length == 0"
+  until: net_list.resources | length > 0
+  retries: 9
+  delay: 10
 
 - name: Get the clusterversion info
   k8s_info:
