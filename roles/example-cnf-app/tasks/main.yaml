@@ -9,9 +9,6 @@
     cmd: >
       set -e -o pipefail;
       ~/clusterconfigs-{{ cluster_name }}/opm render
-      {% if pullsecret_tmp_file is defined %}
-      --authfile {{ pullsecret_tmp_file }}
-      {% endif %}
       {{ catalog_image }} |
       jq -r '.relatedImages[].image'
   args:
