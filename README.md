@@ -9,6 +9,10 @@ OpenShift 4 Cluster should be deployed with  additional operators:
  * Performance Addon operator should be deployed and a `PerformanceProfile`
    should be created.
 
+Application Version
+===================
+The versions of the different parts of example-cnf (trex-app, trex-server, testpmd containers...) are dynamically extracted from the nfv-example-cnf-catalog. To run properly some tests, make sure you are using a dedicated catalog containing the versions fo the images you want to test.
+
 
 Deploy
 ======

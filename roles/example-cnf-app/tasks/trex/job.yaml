@@ -1,8 +1,8 @@
 ---
-- name: fail if app_version is not defined
+- name: fail if trex_app_version is not defined
   fail:
-    msg: "app_version is required"
-  when: app_version is not defined
+    msg: "trex_app_version is required"
+  when: trex_app_version is not defined
 - name: get the list of incomplete jobs
   k8s_info:
     kind: Job
@@ -29,7 +29,7 @@
     var: test_config_item
 - name: set the image name
   set_fact:
-    image_app: "{{ registry_url }}/{{ repo_name }}/trex-container-app:{{ app_version }}"
+    image_app: "{{ registry_url }}/{{ repo_name }}/trex-container-app:{{ trex_app_version }}"
   when: image_app is not defined
 - name: create job for the provided test config
   k8s:

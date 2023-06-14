@@ -18,7 +18,7 @@ spec:
 {% endif %}
   registry: {{ registry_url }}
   org: {{ repo_name }}
-  version: {{ app_version }}
+  version: {{ trex_app_version }}
   imagePullPolicy: {{ image_pull_policy }}
   enableLb: {{ enable_lb }}
 {% if enable_lb|bool %}  
