@@ -86,31 +86,20 @@
       delay: 5
       until: trex_event.resources|length > 0
 
-    - name: Wait for the TRex app to produce TestPassed or TestFailed event
-      pause:
-        seconds: 30
-
-    - name: Fail if TestFailed event is present
+    - name: Wait for the TRex app TestPassed or TestFailed event
       k8s_info:
         namespace: "{{ cnf_namespace }}"
         kind: Event
-        field_selectors:
-          - "reason==TestFailed"
-          - "involvedObject.name={{ trex_app_cr_name }}"
-      register: trex_result
-      failed_when: trex_result.resources | length > 0
-
-    - name: Wait for the TRex app TestPassed event
-      k8s_info:
-        namespace: "{{ cnf_namespace }}"
-        kind: Event
-        field_selectors:
-          - "reason==TestPassed"
-          - "involvedObject.name={{ trex_app_cr_name }}"
+        field_selectors: "involvedObject.name={{ trex_app_cr_name }}"
       register: trex_result
       retries: 5
       delay: 5
-      until: trex_result.resources | length > 0
+      until: "trex_result.resources | selectattr('reason', 'in', ['TestPassed', 'TestFailed']) | list | length > 0"
+
+    - name: Fail if TestFailed event is present
+      fail:
+        msg: "TestFailed event detected"
+      when: "'TestFailed' in trex_result.resources | map(attribute='reason') | list"
 
     - name: Wait for the TRex app PacketMatched event
       k8s_info:
