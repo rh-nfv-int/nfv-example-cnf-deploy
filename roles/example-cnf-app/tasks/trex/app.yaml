@@ -62,7 +62,7 @@
         - "'Running' in trex_app_cr_installation.stdout"
         - "'Successful' in trex_app_cr_installation.stdout"
 
-    - name: Wait for TRex app run start event
+    - name: Wait for the TRex app TestStarted event
       k8s_info:
         namespace: "{{ cnf_namespace }}"
         kind: Event
@@ -74,7 +74,7 @@
       delay: 5
       until: trex_event.resources | length > 0
 
-    - name: Wait for TRex app TestCompleted event
+    - name: Wait for the TRex app TestCompleted event
       k8s_info:
         namespace: "{{ cnf_namespace }}"
         kind: Event
@@ -86,7 +86,21 @@
       delay: 5
       until: trex_event.resources|length > 0
 
-    - name: Get TestPassed event from TRex
+    - name: Wait for the TRex app to produce TestPassed or TestFailed event
+      pause:
+        seconds: 30
+
+    - name: Fail if TestFailed event is present
+      k8s_info:
+        namespace: "{{ cnf_namespace }}"
+        kind: Event
+        field_selectors:
+          - "reason==TestFailed"
+          - "involvedObject.name={{ trex_app_cr_name }}"
+      register: trex_result
+      failed_when: trex_result.resources | length > 0
+
+    - name: Wait for the TRex app TestPassed event
       k8s_info:
         namespace: "{{ cnf_namespace }}"
         kind: Event
@@ -98,7 +112,7 @@
       delay: 5
       until: trex_result.resources | length > 0
 
-    - name: Get PacketMatched event from TRex
+    - name: Wait for the TRex app PacketMatched event
       k8s_info:
         namespace: "{{ cnf_namespace }}"
         kind: Event
@@ -115,3 +129,4 @@
         trex_app_run_passed: true
       when: trex_result.resources | length > 0
   when: enable_trex_app | bool
+...
