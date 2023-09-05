@@ -1,9 +1,7 @@
 ---
 - name: Set retry variables
   set_fact:
-    trex_app_cr_name: trex-app1
-    trex_app_retry_count: "{{ trex_app_retry_count | default(0) | int + 1 }}"
-    trex_app_retry_max: "{{ trex_app_retry_max | default(5) | int }}"
+    trex_app_cr_name: trex-app
 
 - name: Deploy trex app (with retries)
   block:
@@ -15,13 +13,7 @@
         msg: "TRex App run has failed"
       when: not trex_app_run_passed | default(false) | bool
 
-  rescue:
-    - name: Fail when max retries have been reached ({{ trex_app_retry_count }}/{{ trex_app_retry_max }})
-      fail:
-        msg: "Maximum retries have been reached"
-      when:
-        - trex_app_retry_count | int == trex_app_retry_max | int
-
+  always:
     - name: Retrieve TRex app logs
       community.kubernetes.k8s_log:
         namespace: "{{ cnf_namespace }}"
@@ -34,7 +26,7 @@
     - name: Store logs when jobs_logs is defined
       copy:
         content: "{{ trex_app_logs.log }}"
-        dest: "{{ job_logs.path }}/{{ trex_app_cr_name }}-{{ trex_app_retry_count }}.log"
+        dest: "{{ job_logs.path }}/{{ trex_app_cr_name }}.log"
       when:
         - job_logs is defined
         - job_logs.path is defined
@@ -65,6 +57,4 @@
       retries: 30
       delay: 5
       until: "trex_result.resources|length == 0"
-
-    - name: Re-run TRex App to try again
-      include_tasks: retry-trex.yaml
+...
