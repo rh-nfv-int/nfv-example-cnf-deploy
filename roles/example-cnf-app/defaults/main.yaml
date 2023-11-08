@@ -35,6 +35,11 @@ lb_cnf_port_mac_list:
   - "60:04:0f:f1:89:01"
   - "60:04:0f:f1:89:02"
 cnf_app_networks: []
+
+# RuntimeClass that should be used for running DPDK application,
+# if the var is empty, the annotation irq-load-balancing.crio.io: "disable" is not applied
+# high_perf_runtime: "performance-blueprint-profile"
+
 packet_generator_networks: []
 
 packet_rate: 10kpps
