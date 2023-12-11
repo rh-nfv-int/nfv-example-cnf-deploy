@@ -20,4 +20,6 @@ spec:
   socket_memory: 4096
   environments:
     runApp: 1
-
+{% if numa_aware_topology is defined and numa_aware_topology | length %}
+  numa_aware_topology: "{{ numa_aware_topology }}"
+{% endif %}

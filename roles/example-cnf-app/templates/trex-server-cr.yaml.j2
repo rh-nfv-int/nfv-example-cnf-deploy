@@ -23,3 +23,6 @@ spec:
 {% if trex_config_skip|default(false)|bool %}
   trex_config_skip: true
 {% endif %}
+{% if numa_aware_topology is defined and numa_aware_topology | length %}
+  numa_aware_topology: "{{ numa_aware_topology }}"
+{% endif %}
