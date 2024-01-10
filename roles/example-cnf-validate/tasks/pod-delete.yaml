@@ -17,6 +17,7 @@
     cnf_existing_node: "{{ cnf_pod.resources[0].spec.nodeName }}"
     cnf_existing_pod_name: "{{ cnf_pod.resources[0].metadata.name }}"
     cnf_app_count: "{{ cnf_pod.resources|length }}"
+    cnf_app_list: "{{ cnf_pod | json_query('resources[*].metadata.name') }}"
 - name: show current node of testpmd
   debug:
     msg: "CNF App is running on node {{ cnf_existing_node }}"
@@ -49,7 +50,11 @@
 
 - name: set new testpmd node name
   set_fact:
-    testpmd_new_node: "{{ cnf_new_pods.resources[0].spec.nodeName }}"
+    testpmd_new_node: "{{ pod.spec.nodeName }}"
+  loop: "{{ cnf_new_pods.resources }}"
+  loop_control:
+    loop_var: pod
+  when: "pod.metadata.name not in cnf_app_list"
 
 - name: uncordon the node
   shell: |
