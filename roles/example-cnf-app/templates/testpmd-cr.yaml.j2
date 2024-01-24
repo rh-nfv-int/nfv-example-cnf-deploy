@@ -18,10 +18,6 @@ spec:
 {% if high_perf_runtime is defined and high_perf_runtime|length %}
   runtimeClassName: "{{ high_perf_runtime }}"
 {% endif %}
-{% if mac_workaround_enable|default(false)|bool %}
-  macWorkaroundEnable: true
-  macWorkaroundVersion: "{% if 'v0.0.' in operator_version %}4.4{% else %}{{ ocp_version }}{% endif %}"
-{% endif %}
 {% if numa_aware_topology is defined and numa_aware_topology | length %}
   numa_aware_topology: "{{ numa_aware_topology }}"
 {% endif %}
