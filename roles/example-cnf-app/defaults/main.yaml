@@ -14,7 +14,7 @@ trex_tests_wait: true
 
 # Internal variables
 termination_grace_period_seconds: 30
-image_pull_policy: Always
+image_pull_policy: IfNotPresent
 catalog_name: nfv-example-cnf-catalog
 catalog_image: "{{ registry_url }}/{{ repo_name }}/{{ catalog_name }}:{{ operator_version }}"
 
