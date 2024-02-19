@@ -11,6 +11,7 @@ spec:
         example-cnf-type: pkt-gen-app
     spec:
       restartPolicy: Never
+      serviceAccountName: trex-app-account
       containers:
       - name: trex-app
         image: "{{ image_app }}"
@@ -27,8 +28,8 @@ spec:
           value: "{{ 'lb' if enable_lb|default(false) else 'direct' }}"
         - name: LB_MACS
           value: "{{ lb_gen_port_mac_list|join(',') }}"
-        - name: server_url
-          value: trex-server
+        - name: CR_NAME
+          value: "{{ trex_app_job_name }}"
         - name: NODE_NAME
           valueFrom:
             fieldRef:
@@ -37,10 +38,50 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+        - name: TREX_SERVER_URL
+          value: trex-server
 {% if trex_profile_name %}
-        - name: PROFILE_NAME
+        - name: TREX_PROFILE_NAME
           value: "{{ trex_profile_name }}"
 {% endif %}
+{% if duration %}
+        - name: DURATION
+          value: "{{ duration }}"
+{% endif %}
+{% if packet_size %}
+        - name: PACKET_SIZE
+          value: "{{ packet_size }}"
+{% endif %}
+{% if packet_rate %}
+        - name: PACKET_RATE
+          value: "{{ packet_rate }}"
+{% endif %}
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8095
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8095
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /startz
+            port: 8095
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: varlog
         emptyDir: {}

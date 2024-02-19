@@ -47,7 +47,7 @@
           content: |
             {{ lookup('file', trex_profile_path) }}
 - name: create job for trex app
-  include_tasks: trex-job.yaml
+  include_tasks: job.yaml
   when: enable_trex_profile_direct|default(false)|bool
 - name: set trex app cr name
   set_fact:
