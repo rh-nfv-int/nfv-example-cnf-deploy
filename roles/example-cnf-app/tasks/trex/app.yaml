@@ -42,7 +42,7 @@
   block:
     - name: Set TRex app duration
       set_fact:
-        duration: "{{ trex_duration | default(120) }}"
+        duration: "{{ trex_duration|int | default(120) }}"
 
     - name: Create CR for TRex app
       k8s:
