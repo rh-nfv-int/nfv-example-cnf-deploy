@@ -8,7 +8,7 @@
   ansible.builtin.shell:
     cmd: >
       set -e -o pipefail;
-      ~/clusterconfigs-{{ cluster_name }}/opm render
+      {{ opm_tool_path }} render
       {{ catalog_image }} |
       jq -r '.relatedImages[].image'
   args:
