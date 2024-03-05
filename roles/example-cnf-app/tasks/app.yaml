@@ -60,6 +60,7 @@
   set_fact:
     pack_nw: []
     cnf_nw: []
+  when: enable_lb|bool
 
 - name: create packet gen network list for lb with hardcoded macs
   set_fact:
@@ -67,6 +68,7 @@
   loop: "{{ packet_generator_networks }}"
   loop_control:
     index_var: idx
+  when: enable_lb|bool
 
 - name: create cnf app network list for lb with hardcoded macs
   set_fact:
@@ -74,6 +76,7 @@
   loop: "{{ cnf_app_networks }}"
   loop_control:
     index_var: idx
+  when: enable_lb|bool
 
 - name: include lb tasks
   include_tasks: lb-app.yaml
