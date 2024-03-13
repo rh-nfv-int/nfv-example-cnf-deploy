@@ -51,11 +51,6 @@
   when:
     - "cnf_app_networks|length == 0"
 
-- name: Fail when both cnf app and packet generator networks are defined
-  fail:
-    msg: "MAC merging is not supported with multiple networks"
-  when: "cnf_app_networks|length > 1 or (enable_lb|bool and packet_generator_networks|length > 1)"
-
 - name: set facts of modifying networks
   set_fact:
     pack_nw: []
