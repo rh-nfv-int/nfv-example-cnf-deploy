@@ -21,6 +21,9 @@ spec:
   version: {{ trex_app_version }}
   imagePullPolicy: {{ image_pull_policy }}
   enableLb: {{ enable_lb }}
+{% if high_perf_runtime is defined and high_perf_runtime|length %}
+  runtimeClassName: "{{ high_perf_runtime }}"
+{% endif %}
 {% if enable_lb|bool %}  
   lbMacs: {{ lb_gen_port_mac_list }}
 {% endif %}  
