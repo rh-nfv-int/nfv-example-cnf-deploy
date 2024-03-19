@@ -23,3 +23,6 @@ spec:
 {% if numa_aware_topology is defined and numa_aware_topology | length %}
   numa_aware_topology: "{{ numa_aware_topology }}"
 {% endif %}
+{% if high_perf_runtime is defined and high_perf_runtime|length %}
+  runtimeClassName: "{{ high_perf_runtime }}"
+{% endif %}
