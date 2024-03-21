@@ -46,6 +46,10 @@
     trex_app_run_passed: true
   when: trex_result.resources | length > 0
 
+- name: Wait 2 minutes to have all resources ready for the TRex app test
+  pause:
+    seconds: 120
+
 - name: TRexApp block
   block:
     - name: Set TRex app duration
