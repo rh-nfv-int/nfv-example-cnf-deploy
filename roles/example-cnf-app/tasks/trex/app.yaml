@@ -46,9 +46,18 @@
     trex_app_run_passed: true
   when: trex_result.resources | length > 0
 
-- name: Wait 2 minutes to have all resources ready for the TRex app test
-  pause:
-    seconds: 120
+- name: Get logs from example-cnf deployment before starting the job
+  environment:
+    OC_BINARY: "{{ oc_tool_path | default('oc') }}"
+    APP_NAMESPACE: "{{ cnf_namespace }}"
+    SRIOV_NAMESPACE: openshift-sriov-network-operator
+  script:
+    cmd: >
+      ../../scripts/get-example-cnf-status.sh > example-cnf-pre-job-status.log
+  args:
+    chdir: "{{ job_logs.path }}"
+  ignore_errors: true
+  no_log: true
 
 - name: TRexApp block
   block:
@@ -107,6 +116,19 @@
       retries: 5
       delay: 5
       until: "trex_result.resources | selectattr('reason', 'in', ['TestPassed', 'TestFailed']) | list | length > 0"
+
+    - name: Get logs from example-cnf deployment after running the job
+      environment:
+        OC_BINARY: "{{ oc_tool_path | default('oc') }}"
+        APP_NAMESPACE: "{{ cnf_namespace }}"
+        SRIOV_NAMESPACE: openshift-sriov-network-operator
+      script:
+        cmd: >
+          ../../scripts/get-example-cnf-status.sh > example-cnf-post-job-status.log
+      args:
+        chdir: "{{ job_logs.path }}"
+      ignore_errors: true
+      no_log: true
 
     - name: Fail if TestFailed event is present
       fail:
