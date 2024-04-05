@@ -2,6 +2,7 @@
 - name: Set retry variables
   set_fact:
     trex_app_cr_name: trex-app
+  when: trex_app_cr_name is not defined
 
 - name: Deploy TRex app
   block:
