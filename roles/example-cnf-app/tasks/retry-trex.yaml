@@ -11,7 +11,9 @@
     - name: Fail when run did not pass
       fail:
         msg: "TRex App run has failed"
-      when: not trex_app_run_passed | default(false) | bool
+      when:
+        - not trex_app_run_passed | default(false) | bool
+        - not trex_tests_skip_failures|bool
   always:
     - name: Retrieve TRex app logs
       community.kubernetes.k8s_log:

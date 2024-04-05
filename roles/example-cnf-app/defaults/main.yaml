@@ -9,6 +9,9 @@ enable_testpmd: true
 enable_trex: true
 enable_trex_app: true
 
+# If set to true, even if TRex job fails, the job will progress
+trex_tests_skip_failures: false
+
 # If set to true, wait until the end of the profile duration before continue
 trex_tests_wait: true
 

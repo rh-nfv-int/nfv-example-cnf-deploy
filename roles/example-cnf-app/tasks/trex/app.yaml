@@ -133,7 +133,9 @@
     - name: Fail if TestFailed event is present
       fail:
         msg: "TestFailed event detected"
-      when: "'TestFailed' in trex_result.resources | map(attribute='reason') | list"
+      when:
+        - "'TestFailed' in trex_result.resources | map(attribute='reason') | list"
+        - not trex_tests_skip_failures|bool
 
     - name: Wait for the TRex app PacketMatched event
       k8s_info:
@@ -146,10 +148,15 @@
       retries: "{{ (duration|int/2)|round|int }}"
       delay: 5
       until: "trex_result.resources | length > 0"
+      when:
+        - not trex_tests_skip_failures|bool
 
     - name: Set TRex run status if passed
       set_fact:
         trex_app_run_passed: true
-      when: trex_result.resources | length > 0
+      when:
+        - trex_result is defined
+        - trex_result.resources is defined
+        - trex_result.resources | length > 0
   when: enable_trex_app | bool
 ...
