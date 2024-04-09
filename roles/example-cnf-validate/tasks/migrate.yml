@@ -9,36 +9,58 @@
     msg: "TestPMD CRs count ({{ testpmd_list.resources|length }}) is invalid "
   when: "testpmd_list.resources|length != 1"
 
-- name: Wait for at least one PacketMatched event from TRex
+# This means that the TRex job may have failed, so we don't want to run the migration
+# tests in that case
+- name: Check if previous TRex job worked when trex_tests_skip_failures is activated
   k8s_info:
     namespace: "{{ cnf_namespace }}"
     kind: Event
     field_selectors:
       - reason==PacketMatched
   register: matched
-  retries: 12
-  delay: 5
-  until: matched.resources | length > 0
+  when: trex_tests_skip_failures|bool
 
-- name: kubeconfig path if not available
-  when: "kubeconfig_path|default('')|length == 0"
+- name: Do not try migration tests if previous TRex job failed
+  set_fact:
+    try_running_migration_tests: false
+  when:
+    - trex_tests_skip_failures|bool
+    - matched.resources is defined
+    - matched.resources|length == 0
+
+- name: Try to run migration tests
+  when: try_running_migration_tests|bool
   block:
-  - name: get kubeconfig path of not provided
-    shell: "echo $KUBECONFIG"
-    register: kc_out
-  - name: fail if KUBECONFIG env is not found and kubeconfig_path is not set
-    fail:
-      msg: "Failed to find kubeconfig"
-    when: kc_out.stdout|length == 0
-  - name: set kubeconfig path
-    set_fact:
-      kubeconfig_path: "{{ kc_out.stdout }}"
+    - name: Wait for at least one PacketMatched event from TRex
+      k8s_info:
+        namespace: "{{ cnf_namespace }}"
+        kind: Event
+        field_selectors:
+          - reason==PacketMatched
+      register: matched
+      retries: 12
+      delay: 5
+      until: matched.resources | length > 0
 
-- name: run pod deletion test
-  include_tasks: pod-delete.yaml
-  when: "validate_pod_delete|default(true)|bool"
+    - name: kubeconfig path if not available
+      when: "kubeconfig_path|default('')|length == 0"
+      block:
+      - name: get kubeconfig path of not provided
+        shell: "echo $KUBECONFIG"
+        register: kc_out
+      - name: fail if KUBECONFIG env is not found and kubeconfig_path is not set
+        fail:
+          msg: "Failed to find kubeconfig"
+        when: kc_out.stdout|length == 0
+      - name: set kubeconfig path
+        set_fact:
+          kubeconfig_path: "{{ kc_out.stdout }}"
 
-# NOTE: Pod will not be migrated when node is rebooted, --pod-eviction-timeout is 5m default
-#- name: run node reboot test
-#  include_tasks: node-reboot.yaml
-#  when: "validate_node_reboot|default(true)|bool"
+    - name: run pod deletion test
+      include_tasks: pod-delete.yaml
+      when: "validate_pod_delete|default(true)|bool"
+
+    # NOTE: Pod will not be migrated when node is rebooted, --pod-eviction-timeout is 5m default
+    #- name: run node reboot test
+    #  include_tasks: node-reboot.yaml
+    #  when: "validate_node_reboot|default(true)|bool"
