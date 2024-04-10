@@ -1,3 +1,4 @@
 ---
 - include_tasks: migrate.yml
 - include_tasks: validate.yml
+  when: try_running_migration_tests|bool
