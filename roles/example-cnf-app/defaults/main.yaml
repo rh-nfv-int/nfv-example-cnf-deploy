@@ -33,6 +33,9 @@ lb_gen_port_mac_list:
 lb_cnf_port_mac_list:
   - "60:04:0f:f1:89:01"
   - "60:04:0f:f1:89:02"
+testpmd_app_mac_list:
+  - "80:04:0f:f1:89:01"
+  - "80:04:0f:f1:89:02"
 cnf_app_networks: []
 
 # RuntimeClass that should be used for running DPDK application,
