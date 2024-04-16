@@ -77,6 +77,17 @@
   include_tasks: lb-app.yaml
   when: enable_lb|bool
 
+- name: Set local fact for cnf-app pod networks
+  set_fact:
+    networks_testpmd_app: []
+
+- name: Create network list for cnfapp with hardcoded macs
+  set_fact:
+    networks_testpmd_app: "{{ networks_testpmd_app + [ item | combine({ 'mac': testpmd_app_mac_list[idx:idx+item.count] }) ] }}"
+  loop: "{{ cnf_app_networks }}"
+  loop_control:
+    index_var: idx
+
 - name: create cr for cnf application
   k8s:
     definition: "{{ lookup('template', 'testpmd-cr.yaml.j2') }}"

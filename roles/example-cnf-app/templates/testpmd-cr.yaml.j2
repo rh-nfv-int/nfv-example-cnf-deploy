@@ -13,7 +13,7 @@ spec:
   ethpeerMaclist: {{ trex_mac_list }}
   size: 1  
 {% endif %}
-  networks: {{ cnf_app_networks }}
+  networks: {{ networks_testpmd_app }}
   terminationGracePeriodSeconds: {{ termination_grace_period_seconds }}
 {% if high_perf_runtime is defined and high_perf_runtime|length %}
   runtimeClassName: "{{ high_perf_runtime }}"
