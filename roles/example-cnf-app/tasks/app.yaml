@@ -160,8 +160,11 @@
   include_tasks: retry-trex.yaml
   when: enable_trex|bool
 
+# We need to check trex_continuous_mode here to avoid running extra tests, where we would have two or
+# more possible TRex jobs that are running in continuous burst mode.
 - name: trex additional tests
   include_tasks: trex/tests.yaml
   when:
     - enable_trex_app|bool
     - trex_test_config|length > 0
+    - not trex_continuous_mode|bool

@@ -1,0 +1,14 @@
+---
+- name: Gather facts
+  include_tasks: gather-facts.yml
+
+- name: Drain the worker node where testpmd is running
+  include_tasks: node-draining.yml
+
+- name: Validate allocation of new testpmd pod
+  include_tasks: testpmd-validation.yml
+
+- name: Validate TRex job
+  include_tasks: trex-validation.yml
+
+...
