@@ -1,0 +1,106 @@
+---
+
+- name: Extract TRexApp job duration
+  block:
+    - name: Retrieve TRexApp information
+      community.kubernetes.k8s_info:
+        api_version: examplecnf.openshift.io/v1
+        kind: TRexApp
+        namespace: "{{ cnf_namespace }}"
+        name: "{{ trex_app_cr_name }}"
+      register: trex_app_cr
+
+    # If continuous burst mode is activated, then set up a default value to avoid issues in next tasks.
+    # TODO: follow a different procedure for continuous burst mode if provided.
+    - name: Retrieve duration from TRexApp job
+      vars:
+        trex_retrieved_duration: "{{ trex_app_cr.resources[0].spec.duration }}"
+      set_fact:
+        trex_duration: "{{ (trex_retrieved_duration == -1)|ternary(default_trex_duration,trex_retrieved_duration) }}"
+
+- name: Wait for the TRex app TestCompleted event
+  community.kubernetes.k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: Event
+    field_selectors:
+      - "reason==TestCompleted"
+      - "involvedObject.name={{ trex_app_cr_name }}"
+  register: trex_event
+  retries: "{{ (trex_duration|int/2)|round|int }}"
+  delay: 10
+  until: trex_event.resources|length > 0
+
+- name: Wait for the TRex app TestPassed or TestFailed event
+  community.kubernetes.k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: Event
+    field_selectors: "involvedObject.name={{ trex_app_cr_name }}"
+  register: trex_result
+  retries: 5
+  delay: 5
+  until: "trex_result.resources | selectattr('reason', 'in', ['TestPassed', 'TestFailed']) | list | length > 0"
+
+- name: Determine if TRexApp job has failed
+  set_fact:
+    trex_job_failed: true
+  when:
+    - trex_result is defined
+    - trex_result.resources is defined
+    - "'TestFailed' in trex_result.resources | map(attribute='reason') | list"
+
+# Only if TRexApp job passed
+- name: Wait for the TRex app PacketMatched event
+  community.kubernetes.k8s_info:
+    namespace: "{{ cnf_namespace }}"
+    kind: Event
+    field_selectors:
+      - "reason==PacketMatched"
+      - "involvedObject.name={{ trex_app_cr_name }}"
+  register: trex_result
+  retries: "{{ (trex_duration|int/2)|round|int }}"
+  delay: 5
+  until: "trex_result.resources | length > 0"
+  when:
+    - not trex_job_failed|bool
+
+- name: Retrieve TRex app logs
+  community.kubernetes.k8s_log:
+    namespace: "{{ cnf_namespace }}"
+    label_selectors:
+      - example-cnf-type=pkt-gen-app
+      - job-name=job-{{ trex_app_cr_name }}
+  register: trex_app_logs
+  ignore_errors: true
+
+- name: Store logs when jobs_logs is defined
+  copy:
+    content: "{{ trex_app_logs.log }}"
+    dest: "{{ job_logs.path }}/{{ trex_app_cr_name }}.log"
+  when:
+    - job_logs is defined
+    - job_logs.path is defined
+    - not trex_app_logs.failed
+  ignore_errors: true
+
+- name: Calculate the downtime for TRex job execution
+  vars:
+    pod_deletion_time: "{{ timestamp_pod_deletion.stdout }}"
+    pod_recreation_time: "{{ timestamp_pod_recreation.stdout }}"
+    pod_downtime: "{{ pod_recreation_time|float - pod_deletion_time|float }}"
+    trex_downtime_unit: "{{ pod_downtime|float / trex_duration|float }}"
+  set_fact:
+    trex_downtime_seconds: "{{ pod_downtime }}"
+    trex_downtime_percentage: "{{ trex_downtime_unit|float * 100.0 }}"
+
+- name: Create a file to save downtime value
+  copy:
+    dest: "{{ job_logs.path }}/trex-downtime.log"
+    content: "Downtime is {{ trex_downtime_seconds }} seconds, \
+      representing the {{ trex_downtime_percentage }} % of TRex \
+      job duration, which is {{ trex_duration }} seconds"
+  when:
+    - job_logs is defined
+    - job_logs.path is defined
+  ignore_errors: true
+
+...

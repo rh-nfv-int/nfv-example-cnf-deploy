@@ -9,11 +9,22 @@ enable_testpmd: true
 enable_trex: true
 enable_trex_app: true
 
+# Main TRexApp job duration. If set to -1, it will run in continuous burst mode
+trex_duration: 120
+
+# If set to true, the automation behaves as if TRex job is deployed in continuous mode,
+# even if trex_duration is not -1. This is to leave a job running with a given duration
+# to perform some extra checks in different jobs.
+trex_continuous_mode: false
+
 # If set to true, even if TRex job fails, the job will progress
 trex_tests_skip_failures: false
 
 # If set to true, wait until the end of the profile duration before continue
 trex_tests_wait: true
+
+# By default, till having a positive result, it is supposed that TRex job failed
+trex_app_run_passed: false
 
 # Internal variables
 termination_grace_period_seconds: 30

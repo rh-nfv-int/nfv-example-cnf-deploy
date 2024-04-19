@@ -1,0 +1,7 @@
+---
+# Customizable variables
+cnf_namespace: example-cnf
+oc_tool_path: oc
+trex_app_cr_name: trex-app
+trex_job_failed: false
+default_trex_duration: 1800

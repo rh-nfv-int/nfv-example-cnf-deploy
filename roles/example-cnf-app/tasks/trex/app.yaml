@@ -15,7 +15,6 @@
       set_fact:
         networks_trex: []
         packet_gen_net: "{{ packet_generator_networks if enable_lb|bool else cnf_app_networks }}"
-        trex_app_run_passed: false
 
     - name: Create network list for trex with hardcoded macs
       set_fact:
@@ -67,10 +66,11 @@
   no_log: true
 
 - name: TRexApp block
+  when: enable_trex_app | bool
   block:
     - name: Set TRex app duration
       set_fact:
-        duration: "{{ trex_duration | default(120) }}"
+        duration: "{{ trex_duration }}"
 
     - name: Create CR for TRex app
       community.kubernetes.k8s:
@@ -102,6 +102,7 @@
       delay: 5
       until: trex_event.resources | length > 0
 
+    # Omit this check if we are running TRex job in continuous mode
     - name: Wait for the TRex app TestCompleted event
       community.kubernetes.k8s_info:
         namespace: "{{ cnf_namespace }}"
@@ -113,7 +114,9 @@
       retries: "{{ (duration|int/2)|round|int }}"
       delay: 5
       until: trex_event.resources|length > 0
+      when: not trex_continuous_mode|bool
 
+    # Omit this check if we are running TRex job in continuous mode
     - name: Wait for the TRex app TestPassed or TestFailed event
       community.kubernetes.k8s_info:
         namespace: "{{ cnf_namespace }}"
@@ -123,6 +126,7 @@
       retries: 5
       delay: 5
       until: "trex_result.resources | selectattr('reason', 'in', ['TestPassed', 'TestFailed']) | list | length > 0"
+      when: not trex_continuous_mode|bool
 
     - name: Get logs from example-cnf deployment after running the job
       environment:
@@ -137,13 +141,18 @@
       ignore_errors: true
       no_log: true
 
+    # Omit this check if we are running TRex job in continuous mode
     - name: Fail if TestFailed event is present
       fail:
         msg: "TestFailed event detected"
       when:
+        - trex_result is defined
+        - trex_result.resources is defined
         - "'TestFailed' in trex_result.resources | map(attribute='reason') | list"
         - not trex_tests_skip_failures|bool
+        - not trex_continuous_mode|bool
 
+    # Omit this check if we are running TRex job in continuous mode
     - name: Wait for the TRex app PacketMatched event
       community.kubernetes.k8s_info:
         namespace: "{{ cnf_namespace }}"
@@ -157,7 +166,9 @@
       until: "trex_result.resources | length > 0"
       when:
         - not trex_tests_skip_failures|bool
+        - not trex_continuous_mode|bool
 
+    # Omit this check if we are running TRex job in continuous mode
     - name: Set TRex run status if passed
       set_fact:
         trex_app_run_passed: true
@@ -165,5 +176,5 @@
         - trex_result is defined
         - trex_result.resources is defined
         - trex_result.resources | length > 0
-  when: enable_trex_app | bool
+        - not trex_continuous_mode|bool
 ...

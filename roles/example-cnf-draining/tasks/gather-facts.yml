@@ -1,0 +1,25 @@
+---
+
+- name: Get testpmd-app pod
+  community.kubernetes.k8s_info:
+    kind: Pod
+    namespace: "{{ cnf_namespace }}"
+    label_selectors:
+      - example-cnf-type=cnf-app
+  register: cnf_pod
+
+- name: Get trex-server pod
+  k8s_info:
+    kind: Pod
+    namespace: "{{ cnf_namespace }}"
+    label_selectors:
+      - example-cnf-type=pkt-gen
+  register: pktgen_pod
+
+- name: Retrieve context information from testpmd and trex pods
+  set_fact:
+    cnf_existing_node: "{{ cnf_pod.resources[0].spec.nodeName }}"
+    cnf_existing_pod: "{{ cnf_pod.resources[0].metadata.name }}"
+    pktgen_existing_node: "{{ pktgen_pod.resources[0].spec.nodeName }}"
+
+...

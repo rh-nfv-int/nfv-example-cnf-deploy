@@ -4,17 +4,24 @@
     trex_app_cr_name: trex-app
   when: trex_app_cr_name is not defined
 
+- name: Update trex_continuous_mode if trex_duration is set to -1
+  set_fact:
+    trex_continuous_mode: true
+  when: trex_duration == -1
+
 - name: Deploy TRex app
   block:
     - name: Include TRex tasks to create app
       include_tasks: trex/app.yaml
 
+    # Omit this check if we are running TRex job in continuous mode
     - name: Fail when run did not pass
       fail:
         msg: "TRex App run has failed"
       when:
-        - not trex_app_run_passed | default(false) | bool
+        - not trex_app_run_passed | bool
         - not trex_tests_skip_failures|bool
+        - not trex_continuous_mode|bool
   always:
     - name: Retrieve TRex app logs
       community.kubernetes.k8s_log:
