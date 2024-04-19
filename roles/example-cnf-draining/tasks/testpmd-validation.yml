@@ -7,8 +7,8 @@
     name: "{{ cnf_existing_pod }}"
   register: cnf_pod
   until: cnf_pod.resources|length == 0
-  retries: 60
-  delay: 10
+  retries: 24
+  delay: 5
 
 - name: Get timestamp to save the time when testpmd-app was removed
   ansible.builtin.shell: "date +%s"
@@ -28,7 +28,7 @@
     container_state_running: "{{ cnf_pod | json_query(container_state_running_query) }}"
     container_started: "{{ cnf_pod | json_query(container_started_query) }}"
     container_ready: "{{ cnf_pod | json_query(container_ready_query) }}"
-  retries: 60
+  retries: 12
   delay: 10
   until:
     - cnf_pod.resources[0].status.phase == 'Running'
