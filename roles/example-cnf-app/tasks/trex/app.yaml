@@ -66,8 +66,8 @@
   no_log: true
 
 - name: TRexApp block
-  block:
   when: enable_trex_app | bool
+  block:
     - name: Set TRex app duration
       set_fact:
         duration: "{{ trex_duration }}"
