@@ -97,7 +97,7 @@
     dest: "{{ job_logs.path }}/trex-downtime.log"
     content: "Downtime is {{ trex_downtime_seconds }} seconds, \
       representing the {{ trex_downtime_percentage }} % of TRex \
-      job duration, which is {{ trex_duration }}"
+      job duration, which is {{ trex_duration }} seconds"
   when:
     - job_logs is defined
     - job_logs.path is defined
