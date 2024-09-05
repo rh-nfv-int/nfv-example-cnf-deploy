@@ -1,5 +1,9 @@
-Prerequisites
-=============
+# [ARCHIVED] nfv-example-cnf-deploy
+No maintenance on this repository. 
+See the updated version of ====> [example-cnf roles HERE](https://github.com/redhatci/ansible-collection-redhatci-ocp/blob/main/roles/example_cnf_deploy/README.md).
+
+## Prerequisites
+
 OpenShift 4 Cluster should be deployed with  additional operators:
  * SR-IOV operator should be deployed and necessary resources for
    `SriovNetworkNodePolicy` and `SriovNetwork` should be created with
@@ -9,21 +13,19 @@ OpenShift 4 Cluster should be deployed with  additional operators:
  * Performance Addon operator should be deployed and a `PerformanceProfile`
    should be created.
 
-Application Version
-===================
+## Application Version
+
 The versions of the different parts of example-cnf (trex-app, trex-server, testpmd containers...) are dynamically extracted from the nfv-example-cnf-catalog. To run properly some tests, make sure you are using a dedicated catalog containing the versions fo the images you want to test.
 
 
-Deploy
-======
+## Deploy
 
 In order to deploy images from quay.io registry, provide extra vars file
 ```
 K8S_AUTH_KUBECONFIG=kubeconfig ansible-playbook create.yaml --extra-vars @quay-repo-v2.yaml
 ```
 
-Other Deploy Options
---------------------
+### Other Deploy Options
 
 By default, it deploys for the cluster5 of dallas lab
 ```
